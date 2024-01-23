@@ -1,0 +1,28 @@
+spec:
+    containers:
+    - name: "text2vec"
+      image: "<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/<DATABASE>/<SCHEMA>/<IMAGE_REPO>/text2vec"
+      env:
+        SNOWFLAKE_MOUNTED_STAGE_PATH: "stage"
+        ENABLE_CUDA: 1
+        NVIDIA_VISIBLE_DEVICES : all
+      resources:
+        limits:
+          memory: 32G
+          nvidia.com/gpu: 1
+        requests:
+          memory: 30G
+          nvidia.com/gpu: 1
+      volumeMounts:
+        - name: stage
+          mountPath: /workspace/stage
+    endpoints:
+    - name: "text2vec"
+      port: 8080
+      public: true
+    volumes:
+    - name: data
+      source: "@data"
+    - name: stage
+      source: "@files"
+    

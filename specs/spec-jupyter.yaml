@@ -1,0 +1,24 @@
+spec:
+    containers:
+    - name: "jupyter"
+      image: "<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/<DATABASE>/<SCHEMA>/<IMAGE_REPO>/jupyter"
+      env:
+        SNOWFLAKE_MOUNTED_STAGE_PATH: "stage"
+        SNOW_ROLE: WEAVIATE_ROLE
+        SNOW_WAREHOUSE: WEAVIATE_WAREHOUSE
+        SNOW_DATABASE: WEAVIATE_PRODUCT_REVIEWS
+        SNOW_SCHEMA: PUBLIC
+        SNOW_USER: WEAVIATE_USER
+        SNOW_PASSWORD: weaviate123
+      volumeMounts:
+        - name: stage
+          mountPath: /workspace/files
+    endpoints:
+    - name: "jupyter"
+      port: 8888
+      public: true
+    volumes:
+    - name: data
+      source: "@data"
+    - name: stage
+      source: "@files"
