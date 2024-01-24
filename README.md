@@ -250,79 +250,14 @@ Follow these steps to configure the login for Jupyter Notebooks.
 
 ### 10. Load data into your Weaviate instance
 
-Follow these steps to create a schema, and load some sample data into your Weaviate instance.
+Follow these steps to create a schema and load some sample data into your Weaviate instance.
 
 1. Download the [`SampleJSON.json`](https://github.com/Snowflake-Labs/sfguide-getting-started-weaviate-on-spcs/blob/main/sample-data/SampleJSON.json) file to your desktop.
 1. Drag the file into the Jupyter tree view in your browser.
-1. Copy the code for the Weaviate Python client into a Jupyter notebook and run it.
+1. The client code is in the [`TestWeaviate.ipynb`](https://github.com/Snowflake-Labs/sfguide-getting-started-weaviate-on-spcs/blob/main/TestWeaviate.ipynb) Jupyter notebook.
  
-```python
 
-import weaviate
-import weaviate.classes as wvc
-import json
-import os
-
-print("Connecting...")
-
-client = weaviate.connect_to_custom(
-    http_host="weaviate",
-    http_port="8080",
-    http_secure=False,
-    grpc_host="weaviate",
-    grpc_port="50051",
-    grpc_secure=False
-)
-
-print("Success!")
-
-#Create the Questions collection
-collection = client.collections.create(
-    name="Questions",
-    vectorizer_config=wvc.Configure.Vectorizer.text2vec_transformers(),
-    properties=[
-        wvc.Property(
-            name="answer",
-            data_type=wvc.DataType.TEXT
-        ),
-         wvc.Property(
-            name="question",
-            data_type=wvc.DataType.TEXT
-        ),
-         wvc.Property(
-            name="category",
-            data_type=wvc.DataType.TEXT
-        )
-    ]
-)
-
-print("Collection Created!")
-
-# Import all Questions in batches
-items_to_insert = []
-with open("SampleJSON.json") as file:
- data = json.load(file)
-
-for i, d in enumerate(data):
-   new_item = {
-       "answer": d["Answer"],
-       "question": d["Question"],
-       "category": d["Category"],
-   }
-   items_to_insert.append(new_item)
-   # Insert every 100 items
-   if(len(items_to_insert) == 100):
-       collection.data.insert_many(items_to_insert)
-       items_to_insert.clear()
-
-# Insert remaining items
-if(len(items_to_insert) > 0):
-   collection.data.insert_many(items_to_insert)
-
-print("Data inserted into Weaviate!")
-```
-
-### 11. Query your data
+## Query your data
 
 To query your data, run these queries in the a Jupyter notebook.
 
@@ -342,12 +277,21 @@ client = weaviate.connect_to_custom(
 
 collection = client.collections.get("Questions")
 
-# run a simple search
+# Simple search
 response = collection.query.near_text(query="animal",limit=2, include_vector=True)
 #confirm vectors exist
 for o in response.objects:
     print(o.vector)
 
+# Hybrid search	client.close()
+response = collection.query.hybrid(	
+    query="animals",	
+    limit=5	
+)	
+
+for o in response.objects:	
+    print(o.properties)
+    
 client.close()
 ```
 
