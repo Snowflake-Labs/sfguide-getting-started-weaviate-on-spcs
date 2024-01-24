@@ -49,7 +49,7 @@ To configure your own instance, edit these fields before you run the SQL code.
 - Add a role
 - Edit the `PASSWORD` field
  
-### 3. Create a database and a warehouse
+## 3. Create a database and a warehouse
 
 Create a database and warehouse to use with Weaviate.
 
@@ -76,7 +76,7 @@ grant all on schema PUBLIC to role WEAVIATE_ROLE;
 
 To configure your own instance, edit the database name and repository name before you run the SQL code..
 
-### 4. Setup compute pools
+## 4. Setup compute pools
 
 Create compute pools. This code creates compute pools for the sample application. 
 
@@ -111,7 +111,7 @@ DESCRIBE COMPUTE POOL JUPYTER_COMPUTE_POOL;
 
 The compute pools are ready for use when they reach the `ACTIVE` or `IDLE` state.
 
-### 5. Setup files and stages
+## 5. Setup files and stages
 
 Create stages for YAML and Data.    
 
@@ -140,7 +140,7 @@ PUT file:///path/to/spec-text2vec.yaml @yaml_stage overwrite=true auto_compress=
 PUT file:///path/to/spec-weaviate.yaml @yaml_stage overwrite=true auto_compress=false;
 ```
 
-### 6 Build the Docker images
+## 6 Build the Docker images
 
 Exit the `snowsql` client, then build the Docker images in your local shell. There are three images.
 
@@ -180,7 +180,7 @@ docker push x0000000000000-xx00000.registry.snowflakecomputing.com/weaviate_db_0
 docker push x0000000000000-xx00000.registry.snowflakecomputing.com/weaviate_db_001/public/weaviate_repo/text2vec
 ```
 
-### 7. Create the services
+## 7. Create the services
 
 Use `snowsql` to create a service for each component.
 
@@ -209,7 +209,7 @@ CREATE SERVICE TEXT2VEC
 
 ```  
 
-### 8. Grant user permissions
+## 8. Grant user permissions
 
 Grant permission to the services to the weaviate_role. 
 
@@ -219,7 +219,7 @@ GRANT USAGE ON SERVICE WEAVIATE TO ROLE WEAVIATE_ROLE;
 GRANT USAGE ON SERVICE TEXT2VEC TO ROLE WEAVIATE_ROLE;
 ```
 
-### 9. Configure the Jupyter Notebook login
+## 9. Configure the Jupyter Notebook login
 
 Follow these steps to configure the login for Jupyter Notebooks. 
 
@@ -248,7 +248,7 @@ Follow these steps to configure the login for Jupyter Notebooks.
 1. Open the `ingress_url` in a browser. Use the `weaviate_user` credentials to log in. 
 1. Use the token from the logs to set a password.
 
-### 10. Load data into your Weaviate instance
+## 10. Load data into your Weaviate instance
 
 Follow these steps to create a schema and load some sample data into your Weaviate instance.
 
