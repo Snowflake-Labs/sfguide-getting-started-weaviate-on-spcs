@@ -48,8 +48,8 @@ To configure your own instance, edit these fields before you run the SQL code.
 - Add a user
 - Add a role
 - Edit the `PASSWORD` field
-
-### 3. Create a database and a warehouse
+ 
+## 3. Create a database and a warehouse
 
 Create a database and warehouse to use with Weaviate.
 
@@ -76,7 +76,7 @@ grant all on schema PUBLIC to role WEAVIATE_ROLE;
 
 To configure your own instance, edit the database name and repository name before you run the SQL code..
 
-### 4. Setup compute pools
+## 4. Setup compute pools
 
 Create compute pools. This code creates compute pools for the sample application. 
 
@@ -111,7 +111,7 @@ DESCRIBE COMPUTE POOL JUPYTER_COMPUTE_POOL;
 
 The compute pools are ready for use when they reach the `ACTIVE` or `IDLE` state.
 
-### 5. Setup files and stages
+## 5. Setup files and stages
 
 Create stages for YAML and Data.    
 
@@ -123,7 +123,7 @@ CREATE OR REPLACE STAGE DATA ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE');
 CREATE OR REPLACE STAGE FILES ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE');
 ```
 
-SPCS uses `spec files` to configure services. The configuration spec files are in [this repo](https://github.com/Snowflake-Labs/sfguide-weaviate-on-spcs). 
+SPCS uses `spec files` to configure services. The configuration spec files are in [this repo](https://github.com/Snowflake-Labs/sfguide-getting-started-weaviate-on-spcs). 
 
 Download the spec files, then edit them to specify an image repository. To configure your own instance, add your deployment's image repository instead of the sample repository.
 
@@ -140,7 +140,7 @@ PUT file:///path/to/spec-text2vec.yaml @yaml_stage overwrite=true auto_compress=
 PUT file:///path/to/spec-weaviate.yaml @yaml_stage overwrite=true auto_compress=false;
 ```
 
-### 6 Build the Docker images
+## 6 Build the Docker images
 
 Exit the `snowsql` client, then build the Docker images in your local shell. There are three images.
 
@@ -180,7 +180,7 @@ docker push x0000000000000-xx00000.registry.snowflakecomputing.com/weaviate_db_0
 docker push x0000000000000-xx00000.registry.snowflakecomputing.com/weaviate_db_001/public/weaviate_repo/text2vec
 ```
 
-### 7. Create the services
+## 7. Create the services
 
 Use `snowsql` to create a service for each component.
 
@@ -209,7 +209,7 @@ CREATE SERVICE TEXT2VEC
 
 ```  
 
-### 8. Grant user permissions
+## 8. Grant user permissions
 
 Grant permission to the services to the weaviate_role. 
 
@@ -219,14 +219,14 @@ GRANT USAGE ON SERVICE WEAVIATE TO ROLE WEAVIATE_ROLE;
 GRANT USAGE ON SERVICE TEXT2VEC TO ROLE WEAVIATE_ROLE;
 ```
 
-### 9. Configure the Jupyter Notebook login
+## 9. Configure the Jupyter Notebook login
 
 Follow these steps to configure the login for Jupyter Notebooks. 
 
 1. Load the logs from the jupyter endpoint.
 
    ```sql
-   CALL SYSTEM$GET_SERVICE_LOGS('WEAVIATE_PRODUCT_REVIEWS.PUBLIC.JUPYTER', '0', 'jupyter');
+   CALL SYSTEM$GET_SERVICE_LOGS('WEAVIATE_DB_001.PUBLIC.JUPYTER', '0', 'jupyter');
    ```
 
    Near the end of the log, there are two URLs like this:
@@ -248,33 +248,51 @@ Follow these steps to configure the login for Jupyter Notebooks.
 1. Open the `ingress_url` in a browser. Use the `weaviate_user` credentials to log in. 
 1. Use the token from the logs to set a password.
 
-### 10. Load data into your Weaviate instance
+## 10. Load data into your Weaviate instance
 
-Follow these steps to create a schema, and load some sample data into your Weaviate instance.
+Follow these steps to create a schema and load some sample data into your Weaviate instance.
 
 1. Download the [`SampleJSON.json`](https://github.com/Snowflake-Labs/sfguide-getting-started-weaviate-on-spcs/blob/main/sample-data/SampleJSON.json) file to your desktop.
-1. Upload the file (using the upload button in the upper-right corner) into the Jupyter tree view in your browser.
-1. Use the provided notebook (**TestWeaviate.ipynb**) to copy the data into Weaviate.
+1. Drag the file into the Jupyter tree view in your browser.
+1. The client code is in the [`TestWeaviate.ipynb`](https://github.com/Snowflake-Labs/sfguide-getting-started-weaviate-on-spcs/blob/main/TestWeaviate.ipynb) Jupyter notebook.
+ 
 
+## Query your data
 
-### 10. Query your data
-Using Jupyter Notebooks, you can now query your data and confirm vectors are there.
+To query your data, run these queries in the a Jupyter notebook.
 
 ```python
-# run a simple search
+import weaviate
+import json
+import os
+
+client = weaviate.connect_to_custom(
+    http_host="weaviate",
+    http_port="8080",
+    http_secure=False,
+    grpc_host="weaviate",
+    grpc_port="50051",
+    grpc_secure=False
+)
+
+collection = client.collections.get("Questions")
+
+# Simple search
 response = collection.query.near_text(query="animal",limit=2, include_vector=True)
-#confirm vectors exists
+#confirm vectors exist
 for o in response.objects:
     print(o.vector)
 
-#Hybrid search
-response = collection.query.hybrid(
-    query="animals",
-    limit=5
-)
+# Hybrid search	client.close()
+response = collection.query.hybrid(	
+    query="animals",	
+    limit=5	
+)	
 
-for o in response.objects:
+for o in response.objects:	
     print(o.properties)
+    
+client.close()
 ```
 
 ## Suspend and resume services
@@ -314,7 +332,6 @@ DROP IMAGE REPOSITORY WEAVIATE_DB_001.PUBLIC.WEAVIATE_REPO;
 DROP DATABASE WEAVIATE_DB_001;
 DROP WAREHOUSE WEAVIATE_WAREHOUSE;
 DROP COMPUTE POOL WEAVIATE_CP;
-
-
 DROP ROLE WEAVIATE_ROLE;
 DROP SECURITY INTEGRATION SNOWSERVICES_INGRESS_OAUTH;
+```
