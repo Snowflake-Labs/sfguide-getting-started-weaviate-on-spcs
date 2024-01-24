@@ -48,7 +48,7 @@ To configure your own instance, edit these fields before you run the SQL code.
 - Add a user
 - Add a role
 - Edit the `PASSWORD` field
-
+ 
 ### 3. Create a database and a warehouse
 
 Create a database and warehouse to use with Weaviate.
@@ -148,7 +148,7 @@ Exit the `snowsql` client, then build the Docker images in your local shell. The
 - The `text2vec` image lets you process data without leaving Snowpark.
 - The Jupyter image lets you store your notebooks.
 
-The Docker files are in [this repo](https://github.com/Snowflake-Labs/sfguide-getting-started-weaviate-on-spcs/tree/main/dockerfiles). You don't need to modify them to run this sample instance. If you need to use non-standard ports or make other changes for your deployment, edit the Dockerfiles before you create the containers.
+The Docker files are in [this repo](https://github.com/Snowflake-Labs/sfguide-weaviate-on-spcs/tree/main/dockerfiles). You don't need to modify them to run this sample instance. If you need to use non-standard ports or make other changes for your deployment, edit the Dockerfiles before you create the containers.
 
 ```bash
 docker build --rm --platform linux/amd64 -t weaviate -f /path/to/dockerfiles/weaviate.Dockerfile .
@@ -226,7 +226,7 @@ Follow these steps to configure the login for Jupyter Notebooks.
 1. Load the logs from the jupyter endpoint.
 
    ```sql
-   CALL SYSTEM$GET_SERVICE_LOGS('WEAVIATE_PRODUCT_REVIEWS.PUBLIC.JUPYTER', '0', 'jupyter');
+   CALL SYSTEM$GET_SERVICE_LOGS('WEAVIATE_DB_001.PUBLIC.JUPYTER', '0', 'jupyter');
    ```
 
    Near the end of the log, there are two URLs like this:
@@ -253,28 +253,102 @@ Follow these steps to configure the login for Jupyter Notebooks.
 Follow these steps to create a schema, and load some sample data into your Weaviate instance.
 
 1. Download the [`SampleJSON.json`](https://github.com/Snowflake-Labs/sfguide-getting-started-weaviate-on-spcs/blob/main/sample-data/SampleJSON.json) file to your desktop.
-1. Upload the file (using the upload button in the upper-right corner) into the Jupyter tree view in your browser.
-1. Use the provided notebook (**TestWeaviate.ipynb**) to copy the data into Weaviate.
+1. Drag the file into the Jupyter tree view in your browser.
+1. Copy the code for the Weaviate Python client into a Jupyter notebook and run it.
+ 
+```python
 
+import weaviate
+import weaviate.classes as wvc
+import json
+import os
 
-### 10. Query your data
-Using Jupyter Notebooks, you can now query your data and confirm vectors are there.
+print("Connecting...")
+
+client = weaviate.connect_to_custom(
+    http_host="weaviate",
+    http_port="8080",
+    http_secure=False,
+    grpc_host="weaviate",
+    grpc_port="50051",
+    grpc_secure=False
+)
+
+print("Success!")
+
+#Create the Questions collection
+collection = client.collections.create(
+    name="Questions",
+    vectorizer_config=wvc.Configure.Vectorizer.text2vec_transformers(),
+    properties=[
+        wvc.Property(
+            name="answer",
+            data_type=wvc.DataType.TEXT
+        ),
+         wvc.Property(
+            name="question",
+            data_type=wvc.DataType.TEXT
+        ),
+         wvc.Property(
+            name="category",
+            data_type=wvc.DataType.TEXT
+        )
+    ]
+)
+
+print("Collection Created!")
+
+# Import all Questions in batches
+items_to_insert = []
+with open("SampleJSON.json") as file:
+ data = json.load(file)
+
+for i, d in enumerate(data):
+   new_item = {
+       "answer": d["Answer"],
+       "question": d["Question"],
+       "category": d["Category"],
+   }
+   items_to_insert.append(new_item)
+   # Insert every 100 items
+   if(len(items_to_insert) == 100):
+       collection.data.insert_many(items_to_insert)
+       items_to_insert.clear()
+
+# Insert remaining items
+if(len(items_to_insert) > 0):
+   collection.data.insert_many(items_to_insert)
+
+print("Data inserted into Weaviate!")
+```
+
+### 11. Query your data
+
+To query your data, run these queries in the a Jupyter notebook.
 
 ```python
+import weaviate
+import json
+import os
+
+client = weaviate.connect_to_custom(
+    http_host="weaviate",
+    http_port="8080",
+    http_secure=False,
+    grpc_host="weaviate",
+    grpc_port="50051",
+    grpc_secure=False
+)
+
+collection = client.collections.get("Questions")
+
 # run a simple search
 response = collection.query.near_text(query="animal",limit=2, include_vector=True)
-#confirm vectors exists
+#confirm vectors exist
 for o in response.objects:
     print(o.vector)
 
-#Hybrid search
-response = collection.query.hybrid(
-    query="animals",
-    limit=5
-)
-
-for o in response.objects:
-    print(o.properties)
+client.close()
 ```
 
 ## Suspend and resume services
@@ -318,3 +392,6 @@ DROP COMPUTE POOL WEAVIATE_CP;
 
 DROP ROLE WEAVIATE_ROLE;
 DROP SECURITY INTEGRATION SNOWSERVICES_INGRESS_OAUTH;
+
+
+```
