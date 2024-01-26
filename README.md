@@ -252,7 +252,7 @@ Follow these steps to configure the login for Jupyter Notebooks.
 
 Follow these steps to create a schema, and load some sample data into your Weaviate instance.
 
-1. Download the [`SampleJSON.json`](https://github.com/Snowflake-Labs/sfguide-getting-started-weaviate-on-spcs/blob/main/sample-data/SampleJSON.json) file to your desktop.
+1. Download the Jeopardy sample questions from Weaviate [`here`](https://github.com/weaviate-tutorials/quickstart/blob/main/data/jeopardy_tiny.json). Rename the file as as "**SampleJSON.json**" and save it to your local drive.
 1. Upload the file (using the upload button in the upper-right corner) into the Jupyter tree view in your browser.
 1. Use the provided notebook (**TestWeaviate.ipynb**) to copy the data into Weaviate.
 
