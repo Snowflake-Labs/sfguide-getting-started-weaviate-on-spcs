@@ -48,7 +48,7 @@ To configure your own instance, edit these fields before you run the SQL code.
 - Add a user
 - Add a role
 - Edit the `PASSWORD` field
- 
+
 ## 3. Create a database and a warehouse
 
 Create a database and warehouse to use with Weaviate.
@@ -247,6 +247,7 @@ Follow these steps to configure the login for Jupyter Notebooks.
 
 1. Open the `ingress_url` in a browser. Use the `weaviate_user` credentials to log in. 
 1. Use the token from the logs to set a password.
+
 
 ## 10. Load data into your Weaviate instance
 

@@ -1,12 +1,3 @@
-author: Jon Tuite
-id: weaviate-generative-feedback-loop
-summary: Create an end-to-end generative feedback loop by using an LLM to turn product review data into a searchable products collection in Weaviate.
-categories: Getting-Started
-environments: web
-status: Published 
-feedback link: https://github.com/Snowflake-Labs/sfguides/issues
-tags: Weaviate, Containers, Ollama, Mistral, LLM, vectors, vectorizer, embeddings, semantic search, hybrid search 
-
 # Weaviate Generative Feedback Loop
 
 
@@ -125,7 +116,7 @@ grant all PRIVILEGES on schema PUBLIC to WEAVIATE_ROLE;
 grant all on schema PUBLIC to role WEAVIATE_ROLE;
 
 ----------PUT FILE INTO STAGE ------------
-PUT file:///Users/jonathantuite/Documents/SnowflakeBlog/Data/Musical_instruments_reviews.csv @REVIEW_DATA overwrite=true;
+PUT file://YOUR/PATH/Musical_instruments_reviews.csv @REVIEW_DATA overwrite=true;
 ```
 ```SQL
 ------------COPY DATA INTO SNOWFLAKE TABLES------------
@@ -187,7 +178,7 @@ docker push <SNOWACCOUNT-SNOWORG>.registry.snowflakecomputing.com/weaviate_produ
 Back in Snowflake, upload the YAML file for the image to use.
 
 ```SQL
-PUT file:///Users/jonathantuite/Documents/SnowflakeBlog/Docker/spec-ollama.yaml @yaml_stage overwrite=true auto_compress=false overwrite=true;
+PUT file:///YOUR/PATH/Docker/spec-ollama.yaml @yaml_stage overwrite=true auto_compress=false overwrite=true;
 ```
 ### Add images for Weaviate, text-2-vec, and jupyter
 
