@@ -57,7 +57,7 @@ Duration: 2-3 hours
 
 - [Product review dataset](https://www.kaggle.com/datasets/eswarchandt/amazon-music-reviews)
 
-
+These steps are only shown as an example, and following along with the example may require additional rights to third-party data, products, or services that are not owned or provided by Snowflake.  Please ensure that you have the appropriate rights in third-party data, products, or services before continuing.
 
 ## Loading Data
 
@@ -66,7 +66,7 @@ Start by loading data into Snowflake.  Skip this step if your data is already th
 Dataset:
 [https://www.kaggle.com/datasets/eswarchandt/amazon-music-reviews](https://www.kaggle.com/datasets/eswarchandt/amazon-music-reviews)
 
-
+These steps are only shown as an example, and following along with the example may require additional rights to third-party data, products, or services that are not owned or provided by Snowflake.  Please ensure that you have the appropriate rights in third-party data, products, or services before continuing.
 
 ```SQL
 ------------LOGIN---------
