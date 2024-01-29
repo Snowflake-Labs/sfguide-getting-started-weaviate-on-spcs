@@ -165,7 +165,7 @@ docker build --rm --platform linux/amd64 -t text2vec ./dockerfiles/text2vec
 Log in to the Docker repository. The Snowpark account name, username, and password are the same as your `snowsql` credentials.
 
 ```bash
-docker login YOUR_SNOWACCOUNT-SNOWORG.registry.snowflakecomputing.com/THE_REPO_YOU_CREATED_ABOVE  -u YOUR_SNOWFLAKE_USERNAME
+docker login YOUR_SNOWACCOUNT-SNOWORG.registry.snowflakecomputing.com  -u YOUR_SNOWFLAKE_USERNAME
 ```
 
 After you login to the Docker repository, tag the images and push them to the repository.
