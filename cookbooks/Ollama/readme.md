@@ -21,7 +21,7 @@ Duration: 2-3 hours
 - [Python 3.10](https://www.python.org/downloads/) installed
     - Note that you will be creating a Python environment with 3.10 in the **Setup the Local Environment** step
 - (Optional) [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) installed
-    - **Download the git repo [here](https://github.com/Snowflake-Labs/sfguide-weaviate-on-spcs.git)**. You can simply download the repo as a .zip if you don't have Git installed locally.
+    - **Download the git repo [here](https://github.com/Snowflake-Labs/sfguide-getting-started-weaviate-on.git)**. You can simply download the repo as a .zip if you don't have Git installed locally.
 - (Optional) [VSCode](https://code.visualstudio.com/) (recommended) with the [Docker](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker), [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python), and [Snowflake](https://marketplace.visualstudio.com/items?itemName=snowflake.snowflake-vsc) extensions installed.
 - A non-trial Snowflake account in a supported [AWS region](https://docs.snowflake.com/en/developer-guide/snowpark-container-services/overview#available-regions).
 - Snowpark Container Services (SPCS) enabled on your account
@@ -41,7 +41,7 @@ Duration: 2-3 hours
 
 - (optional) The [weaviate-on-spcs](https://quickstarts.snowflake.com/guide/weaviate-on-spcs/index.html) quickstart
 
-- [SFGUIDE-WEAVIATE-ON-SPCS](https://github.com/Snowflake-Labs/sfguide-weaviate-on-spcs) repo
+- [SFGUIDE-WEAVIATE-ON-SPCS](https://github.com/Snowflake-Labs/sfguide-getting-started-weaviate-on-spcs) repo
   - Within the repo is a **cookbooks** folder and all required files can be found in the "**cookbooks/Ollama**" folder
 
 - [Ollama](https://github.com/jmorganca/ollama) repository so you can build a docker image
