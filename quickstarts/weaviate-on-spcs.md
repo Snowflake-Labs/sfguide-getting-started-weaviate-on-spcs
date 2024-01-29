@@ -148,9 +148,9 @@ Exit the `snowsql` client, then build the Docker images in your local shell. The
 The Docker files are in [this repo](https://github.com/Snowflake-Labs/sfguide-getting-started-weaviate-on-spcs/tree/main/dockerfiles). You don't need to modify them to run this sample instance. If you need to use non-standard ports or make other changes for your deployment, edit the Dockerfiles before you create the containers.
 
 ```bash
-docker build --rm --platform linux/amd64 -t weaviate ./dockerfiles/weaviate/Dockerfile
-docker build --rm --platform linux/amd64 -t jupyter ./dockerfiles/jupyter/Dockerfile
-docker build --rm --platform linux/amd64 -t text2vec ./path/to/dockerfiles/text2vec/Dockerfile
+docker build --rm --platform linux/amd64 -t weaviate ./dockerfiles/weaviate
+docker build --rm --platform linux/amd64 -t jupyter ./dockerfiles/jupyter
+docker build --rm --platform linux/amd64 -t text2vec ./path/to/dockerfiles/text2vec
 ```
 
 Log in to the Docker repository. The Snowpark account name, username, and password are the same as your `snowsql` credentials.
