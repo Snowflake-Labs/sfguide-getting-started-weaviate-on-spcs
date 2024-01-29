@@ -120,7 +120,7 @@ CREATE OR REPLACE STAGE DATA ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE');
 CREATE OR REPLACE STAGE FILES ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE');
 ```
 
-SPCS uses `spec files` to configure services. The configuration spec files are in [this repo](https://github.com/Snowflake-Labs/sfguide-getting-started-weaviate-on-spcs). 
+SPCS uses `spec files` to configure services. The configuration spec files are in [this repo](../specs).
 
 Download the spec files, then edit them to specify an image repository. To configure your own instance, add your deployment's image repository instead of the sample repository.
 
