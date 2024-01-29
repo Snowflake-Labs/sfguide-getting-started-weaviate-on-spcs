@@ -1,5 +1,3 @@
-snowsql -a "YOURINSTANCE" -u "YOURUSER"
-
 USE ROLE ACCOUNTADMIN;
 CREATE SECURITY INTEGRATION SNOWSERVICES_INGRESS_OAUTH
   TYPE=oauth
@@ -52,31 +50,29 @@ CREATE OR REPLACE STAGE YAML_STAGE;
 CREATE OR REPLACE STAGE DATA ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE');
 CREATE OR REPLACE STAGE FILES ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE');
 
-PUT file:///path/to/spec-jupyter.yaml @yaml_stage;
-PUT file:///path/to/spec-text2vec.yaml @yaml_stage;
-PUT file:///path/to/spec-weaviate.yaml @yaml_stage;
+PUT file:///path/to/jupyter.yaml @yaml_stage;
+PUT file:///path/to/text2vec.yaml @yaml_stage;
+PUT file:///path/to/weaviate.yaml @yaml_stage;
 
 CREATE SERVICE WEAVIATE
   IN COMPUTE POOL WEAVIATE_COMPUTE_POOL 
   FROM @YAML_STAGE
-  SPEC='spec-weaviate.yaml'
+  SPEC='weaviate.yaml'
   MIN_INSTANCES=1
   MAX_INSTANCES=1;
 
 CREATE SERVICE JUPYTER
   IN COMPUTE POOL JUPYTER_COMPUTE_POOL 
   FROM @YAML_STAGE
-  SPEC='spec-jupyter.yaml'
+  SPEC='jupyter.yaml'
   MIN_INSTANCES=1
   MAX_INSTANCES=1;
 
 CREATE SERVICE TEXT2VEC
   IN COMPUTE POOL TEXT2VEC_COMPUTE_POOL 
   FROM @YAML_STAGE
-  SPEC='spec-text2vec.yaml'
+  SPEC='text2vec.yaml'
   MIN_INSTANCES=1
   MAX_INSTANCES=1;
 
-  show services;
-
-  
+SHOW ENDPOINTS IN SERVICE JUPYTER;
