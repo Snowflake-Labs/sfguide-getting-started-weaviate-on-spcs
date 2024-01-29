@@ -132,9 +132,9 @@ Download the spec files, then edit them to specify an image repository. To confi
 When the files are updated, use the `snowsql` client to upload them. 
 
 ```sql
-PUT file:///path/to/spec-jupyter.yaml @yaml_stage overwrite=true auto_compress=false;
-PUT file:///path/to/spec-text2vec.yaml @yaml_stage overwrite=true auto_compress=false;
-PUT file:///path/to/spec-weaviate.yaml @yaml_stage overwrite=true auto_compress=false;
+PUT file:///path/to/jupyter.yaml @yaml_stage overwrite=true auto_compress=false;
+PUT file:///path/to/text2vec.yaml @yaml_stage overwrite=true auto_compress=false;
+PUT file:///path/to/weaviate.yaml @yaml_stage overwrite=true auto_compress=false;
 ```
 
 ### 6 Build the Docker images
@@ -148,9 +148,9 @@ Exit the `snowsql` client, then build the Docker images in your local shell. The
 The Docker files are in [this repo](https://github.com/Snowflake-Labs/sfguide-getting-started-weaviate-on-spcs/tree/main/dockerfiles). You don't need to modify them to run this sample instance. If you need to use non-standard ports or make other changes for your deployment, edit the Dockerfiles before you create the containers.
 
 ```bash
-docker build --rm --platform linux/amd64 -t weaviate -f /path/to/dockerfiles/weaviate.Dockerfile .
-docker build --rm --platform linux/amd64 -t jupyter -f /path/to/dockerfiles/jupyter.Dockerfile .
-docker build --rm --platform linux/amd64 -t text2vec -f /path/to/dockerfiles/text2vec.Dockerfile .
+docker build --rm --platform linux/amd64 -t weaviate ./dockerfiles/weaviate/Dockerfile
+docker build --rm --platform linux/amd64 -t jupyter ./dockerfiles/jupyter/Dockerfile
+docker build --rm --platform linux/amd64 -t text2vec ./path/to/dockerfiles/text2vec/Dockerfile
 ```
 
 Log in to the Docker repository. The Snowpark account name, username, and password are the same as your `snowsql` credentials.
@@ -186,21 +186,21 @@ USE ROLE SYSADMIN;
 CREATE SERVICE WEAVIATE
   IN COMPUTE POOL WEAVIATE_COMPUTE_POOL 
   FROM @YAML_STAGE
-  SPEC='spec-weaviate.yaml'
+  SPEC='weaviate.yaml'
   MIN_INSTANCES=1
   MAX_INSTANCES=1;
 
 CREATE SERVICE JUPYTER
   IN COMPUTE POOL JUPYTER_COMPUTE_POOL 
   FROM @YAML_STAGE
-  SPEC='spec-jupyter.yaml'
+  SPEC='jupyter.yaml'
   MIN_INSTANCES=1
   MAX_INSTANCES=1;
 
 CREATE SERVICE TEXT2VEC
   IN COMPUTE POOL TEXT2VEC_COMPUTE_POOL 
   FROM @YAML_STAGE
-  SPEC='spec-text2vec.yaml'
+  SPEC='text2vec.yaml'
   MIN_INSTANCES=1
   MAX_INSTANCES=1;
 
@@ -216,25 +216,9 @@ GRANT USAGE ON SERVICE WEAVIATE TO ROLE WEAVIATE_ROLE;
 GRANT USAGE ON SERVICE TEXT2VEC TO ROLE WEAVIATE_ROLE;
 ```
 
-### 9. Configure the Jupyter Notebook login
+### 9. Log in to the Jupyter Notebook Server
 
 Follow these steps to configure the login for Jupyter Notebooks. 
-
-1. Load the logs from the jupyter endpoint.
-
-   ```sql
-   CALL SYSTEM$GET_SERVICE_LOGS('WEAVIATE_PRODUCT_REVIEWS.PUBLIC.JUPYTER', '0', 'jupyter');
-   ```
-
-   Near the end of the log, there are two URLs like this:
-
-   ```
-   http://statefulset-0:8888/tree?token=abcd90991a280794f1f1ce0281234e96e877674aa0399999                                                                                
-   
-   http://127.0.0.1:8888/tree?token=abcd90991a280794f1f1ce0281234e96e877674aa0399999  
-   ```
-
-   Save the token, `abcd90991a280794f1f1ce0281234e96e877674aa0399999`.
 
 1. Get the `ingress_url` URL that you use to access the Jupyter notebook server.
 
@@ -243,7 +227,6 @@ Follow these steps to configure the login for Jupyter Notebooks.
    ```
 
 1. Open the `ingress_url` in a browser. Use the `weaviate_user` credentials to log in. 
-1. Use the token from the logs to set a password.
 
 ### 10. Load data into your Weaviate instance
 

@@ -17,4 +17,4 @@ RUN mkdir /workspace/.local /workspace/.cache && chmod 777 -R /workspace
 COPY --chmod=777 Copy_Products_to_Weaviate.ipynb TestWeaviate.ipynb ./
 
 # Run Jupyter Notebook on container startup
-CMD ["jupyter", "notebook", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root"]
+CMD ["jupyter", "notebook", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root", "--NotebookApp.token=''", "--NotebookApp.password=''"]
