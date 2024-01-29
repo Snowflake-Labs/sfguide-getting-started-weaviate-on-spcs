@@ -1,10 +1,3 @@
----
-title: Snowpark Container Services (SPCS)
-sidebar_position: 20
-image: og/docs/installation.jpg
-# tags: ['installation', 'Snowpark', 'SPCS']
----
-
 Snowflake provides a hosted solution, [Snowpark Container Services (SPCS)](https://docs.snowflake.com/en/developer-guide/snowpark-container-services/overview), that runs containers inside the Snowflake ecosystem. To configure a Weaviate instance that runs in SPCS, follow the steps on this page.
 
 The code in this guide configures a sample SPCS instance. The sample instance demonstrates how to run Weaviate in Snowpark. To configure your own SPCS instance, change the database name, warehouse name, image repository name, and other example values to match your deployment.
