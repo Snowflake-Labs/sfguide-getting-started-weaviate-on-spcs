@@ -83,9 +83,9 @@ Create a database, image repository and stages. The image repository will house 
 -- + image repo --
 -- + stages --
 USE ROLE SYSADMIN;
-CREATE DATABASE IF NOT EXISTS WEAVIATE_DB_001;
-USE DATABASE WEAVIATE_DB_001;
-CREATE IMAGE REPOSITORY WEAVIATE_DB_001.PUBLIC.WEAVIATE_REPO;
+CREATE DATABASE IF NOT EXISTS WEAVIATE_DEMO;
+USE DATABASE WEAVIATE_DEMO;
+CREATE IMAGE REPOSITORY WEAVIATE_DEMO.PUBLIC.WEAVIATE_REPO;
 CREATE OR REPLACE STAGE YAML_STAGE;
 CREATE OR REPLACE STAGE DATA ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE');
 CREATE OR REPLACE STAGE FILES ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE');
@@ -96,10 +96,10 @@ Grant privileges on the databases to the WEAVIATE_ROLE:
 ```sql
 -- Grants for Weaviate Role --
 USE ROLE SECURITYADMIN;
-GRANT ALL PRIVILEGES ON DATABASE WEAVIATE_DB_001 TO WEAVIATE_ROLE;
-GRANT ALL PRIVILEGES ON SCHEMA WEAVIATE_DB_001.PUBLIC TO WEAVIATE_ROLE;
+GRANT ALL PRIVILEGES ON DATABASE WEAVIATE_DEMO TO WEAVIATE_ROLE;
+GRANT ALL PRIVILEGES ON SCHEMA WEAVIATE_DEMO.PUBLIC TO WEAVIATE_ROLE;
 GRANT ALL PRIVILEGES ON WAREHOUSE WEAVIATE_WAREHOUSE TO WEAVIATE_ROLE;
-GRANT ALL PRIVILEGES ON STAGE WEAVIATE_DB_001.PUBLIC.FILES TO WEAVIATE_ROLE;
+GRANT ALL PRIVILEGES ON STAGE WEAVIATE_DEMO.PUBLIC.FILES TO WEAVIATE_ROLE;
 ```
 
 ### 3. Setup compute pools
@@ -146,12 +146,12 @@ Build the Docker images in your local shell. There are three images:
 - The `text2vec` image lets you process data without leaving Snowpark.
 - The Jupyter image lets you store your notebooks.
 
-The Docker files are in [this repo](../dockerfiles). You don't need to modify them to run this sample instance. If you need to use non-standard ports or make other changes for your deployment, edit the Dockerfiles before you create the containers. You can run these commands from the root directory of this repository.
+The Docker files are in [this repo](../images). You don't need to modify them to run this sample instance. If you need to use non-standard ports or make other changes for your deployment, edit the Dockerfiles before you create the containers. You can run these commands from the root directory of this repository.
 
 ```bash
-docker build --rm --platform linux/amd64 -t weaviate ./dockerfiles/weaviate
-docker build --rm --platform linux/amd64 -t jupyter ./dockerfiles/jupyter
-docker build --rm --platform linux/amd64 -t text2vec ./dockerfiles/text2vec
+docker build --rm --platform linux/amd64 -t weaviate ./images/weaviate
+docker build --rm --platform linux/amd64 -t jupyter ./images/jupyter
+docker build --rm --platform linux/amd64 -t text2vec ./images/text2vec
 ```
 
 Log in to the Docker repository. The Snowpark account name, username, and password are the same as your `snowsql` credentials.
@@ -165,17 +165,17 @@ After you login to the Docker repository, tag the images and push them to the re
 The `docker tag` commands look like this:
 
 ```bash
-docker tag weaviate <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_db_001/public/weaviate_repo/weaviate
-docker tag juypter <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_db_001/public/weaviate_repo/jupyter
-docker tag text2vec <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_db_001/public/weaviate_repo/text2vec
+docker tag weaviate <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/weaviate
+docker tag juypter <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/jupyter
+docker tag text2vec <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/text2vec
 ```
 
 The `docker push` commands look like this:
 
 ```bash
-docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_db_001/public/weaviate_repo/weaviate
-docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_db_001/public/weaviate_repo/jupyter
-docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_db_001/public/weaviate_repo/text2vec
+docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/weaviate
+docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/jupyter
+docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/text2vec
 ```
 
 ### 5. Setup service spec files
@@ -187,10 +187,8 @@ Download the [spec files](../specs), then edit them to specify an image reposito
 For instance, in the `jupyter.yaml` spec, you would update the `image` definition to include your Snowflake Account's information:
 
 ```yaml
-      image: "<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_db_001/public/weaviate_repo/jupyter"
+      image: "<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/jupyter"
 ```
-
-Additionally, ensure the name of the `SNOW_DATABASE` parameter set in the `env` block of the [jupyter.yaml](../specs/jupyter.yaml) matches your database's name (in this case `weaviate_db_001`).
 
 When the files are updated, use the `snowsql` client on your local machine to upload them. 
 
@@ -207,7 +205,7 @@ Use `snowsql` to create a service for each component.
 ```sql
 -- Services --
 USE ROLE SYSADMIN;
-USE DATABASE WEAVIATE_DB_001;
+USE DATABASE WEAVIATE_DEMO;
 USE SCHEMA PUBLIC;
 CREATE SERVICE WEAVIATE
   IN COMPUTE POOL WEAVIATE_COMPUTE_POOL 
@@ -236,9 +234,9 @@ Grant permission to the services to the weaviate_role, to ensure the correspondi
 ```sql
 -- Usage for Weaviate Role --
 USE ROLE SECURITYADMIN;
-GRANT USAGE ON SERVICE WEAVIATE_DB_001.PUBLIC.JUPYTER TO ROLE WEAVIATE_ROLE;
-GRANT USAGE ON SERVICE WEAVIATE_DB_001.PUBLIC.WEAVIATE TO ROLE WEAVIATE_ROLE;
-GRANT USAGE ON SERVICE WEAVIATE_DB_001.PUBLIC.TEXT2VEC TO ROLE WEAVIATE_ROLE;
+GRANT USAGE ON SERVICE WEAVIATE_DEMO.PUBLIC.JUPYTER TO ROLE WEAVIATE_ROLE;
+GRANT USAGE ON SERVICE WEAVIATE_DEMO.PUBLIC.WEAVIATE TO ROLE WEAVIATE_ROLE;
+GRANT USAGE ON SERVICE WEAVIATE_DEMO.PUBLIC.TEXT2VEC TO ROLE WEAVIATE_ROLE;
 ```
 
 ### 8. Log in to the Jupyter Notebook Server
@@ -248,7 +246,7 @@ Get the `ingress_url` URL that you use to access the Jupyter notebook server.
 ```sql
 -- Get public Jupyter URL --
 USE ROLE SYSADMIN;
-SHOW ENDPOINTS IN SERVICE WEAVIATE_DB_001.PUBLIC.JUPYTER;
+SHOW ENDPOINTS IN SERVICE WEAVIATE_DEMO.PUBLIC.JUPYTER;
 ```
 
 Open the `ingress_url` in a browser. Use the `weaviate_user` credentials to log in. 
@@ -306,9 +304,9 @@ To remove the services, run the following code in to the `snowsql` client.
 ```sql
 -- Services --
 USE ROLE SYSADMIN;
-DROP SERVICE WEAVIATE_DB_001.PUBLIC.WEAVIATE;
-DROP SERVICE WEAVIATE_DB_001.PUBLIC.JUPYTER;
-DROP SERVICE WEAVIATE_DB_001.PUBLIC.TEXT2VEC;
+DROP SERVICE WEAVIATE_DEMO.PUBLIC.WEAVIATE;
+DROP SERVICE WEAVIATE_DEMO.PUBLIC.JUPYTER;
+DROP SERVICE WEAVIATE_DEMO.PUBLIC.TEXT2VEC;
 
 -- Compute Pools --
 USE ROLE SYSADMIN;
@@ -318,7 +316,7 @@ DROP COMPUTE POOL TEXT2VEC_COMPUTE_POOL;
 
 -- Weaviate Database --
 USE ROLE SYSADMIN;
-DROP DATABASE WEAVIATE_DB_001;
+DROP DATABASE WEAVIATE_DEMO;
 
 -- Weaviate Warehouse --
 USE ROLE SYSADMIN;
