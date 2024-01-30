@@ -1,0 +1,29 @@
+-- Make sure you finished the common setup.sql
+-- before running this setup.sql
+
+-- Compute Pool --
+CREATE COMPUTE POOL IF NOT EXISTS TEXT2VEC_COMPUTE_POOL
+  MIN_NODES = 1
+  MAX_NODES = 1
+  INSTANCE_FAMILY = GPU_NV_S
+  AUTO_RESUME = true;
+
+DESCRIBE COMPUTE POOL TEXT2VEC_COMPUTE_POOL;
+
+-- Put spec in stage --
+USE ROLE SYSADMIN;
+USE DATABASE WEAVIATE_DEMO;
+USE SCHEMA PUBLIC;
+PUT file:///path/to/text2vec.yaml @yaml_stage;
+
+
+-- Service --
+CREATE SERVICE TEXT2VEC
+  IN COMPUTE POOL TEXT2VEC_COMPUTE_POOL 
+  FROM @YAML_STAGE
+  SPEC='text2vec.yaml'
+  MIN_INSTANCES=1
+  MAX_INSTANCES=1;
+
+-- Usage for Weaviate Role --
+GRANT USAGE ON SERVICE WEAVIATE_DEMO.PUBLIC.TEXT2VEC TO ROLE WEAVIATE_ROLE;
