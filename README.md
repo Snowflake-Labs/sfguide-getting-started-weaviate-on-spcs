@@ -2,6 +2,6 @@ Snowflake provides a hosted solution, [Snowpark Container Services (SPCS)](https
 
 In this repository are two guides:
 
-1. [Weaviate on SPCS](quickstarts/weaviate-on-spcs.md) - Deploy a Weaviate vector database and a Jupyter notebook, then interact with Weaviate.
+1. [Weaviate on SPCS](guides/weaviate-on-spcs.md) - Deploy a Weaviate vector database and a Jupyter notebook, then interact with Weaviate.
 
-2. [Weaviate Generative Feedback Loop](quickstarts/weaviate-generative-feedback-loop.md) - Deploy a Jupyter notebook on GPUs to summarize instrument reviews using Ollama and Mistral, then load that data into Weaviate and use semantic search to find relevant results.
+2. [Weaviate Generative Feedback Loop](guides/weaviate-generative-feedback-loop.md) - Deploy a Jupyter notebook on GPUs to summarize instrument reviews using Ollama and Mistral, then load that data into Weaviate and use semantic search to find relevant results.
