@@ -1,7 +1,7 @@
 spec:
   container:
   - name: ollama
-    image: "<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/<DATABASE>/<SCHEMA>/<IMAGE_REPO>/ollama"
+    image: "<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/ollama"
     volumeMounts:
       - name: stage
         mountPath: /workspace/stage
@@ -9,7 +9,7 @@ spec:
       LLM_MODEL: mistral
       SNOW_ROLE: WEAVIATE_ROLE
       SNOW_WAREHOUSE: WEAVIATE_WAREHOUSE
-      SNOW_DATABASE: WEAVIATE_PRODUCT_REVIEWS
+      SNOW_DATABASE: WEAVIATE_DEMO
       SNOW_SCHEMA: PUBLIC
       SNOW_USER: WEAVIATE_USER
       SNOW_PASSWORD: weaviate123

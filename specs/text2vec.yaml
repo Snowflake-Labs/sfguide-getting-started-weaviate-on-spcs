@@ -1,7 +1,7 @@
 spec:
     containers:
     - name: "text2vec"
-      image: "<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/<DATABASE>/<SCHEMA>/<IMAGE_REPO>/text2vec"
+      image: "<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/text2vec"
       env:
         SNOWFLAKE_MOUNTED_STAGE_PATH: "stage"
         ENABLE_CUDA: 1
@@ -20,9 +20,5 @@ spec:
     - name: "text2vec"
       port: 8080
       public: true
-    volumes:
-    - name: data
-      source: "@data"
     - name: stage
       source: "@files"
-    
