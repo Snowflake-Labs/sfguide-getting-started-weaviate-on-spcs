@@ -18,7 +18,7 @@ spec:
       port: 8888
       public: true
     volumes:
-    - name: data
-      source: "@data"
     - name: stage
       source: "@files"
+      uid: 1000
+      gid: 1000
