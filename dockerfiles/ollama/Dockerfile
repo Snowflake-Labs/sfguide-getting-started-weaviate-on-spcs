@@ -38,7 +38,6 @@ COPY --chmod=777 requirements-snowflake.txt Create_Product_Descriptions.ipynb st
 RUN pip3 install --no-cache-dir --upgrade pip
 RUN pip3 install --no-cache-dir -r requirements-snowflake.txt
 RUN mkdir /workspace/.local /workspace/.cache && chmod 777 -R Create_Product_Descriptions.ipynb
-RUN python3 -m notebook --ip='*' --port=8888 --no-browser --allow-root
 
 ENTRYPOINT ["./startup.sh"]
 
