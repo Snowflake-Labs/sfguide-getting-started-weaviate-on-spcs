@@ -257,7 +257,7 @@ Follow these steps to create a schema in the Weaviate DB, and load some sample d
 
 1. Download the Jeopardy sample questions from Weaviate [`here`](https://github.com/weaviate-tutorials/quickstart/blob/main/data/jeopardy_tiny.json). Rename the file as as "**SampleJSON.json**" and save it to your local drive.
 1. Upload the file (using the upload button in the upper-right corner) into the Jupyter tree view in your browser.
-1. Use the provided notebook (**TestWeaviate.ipynb**) to copy the data into Weaviate.
+1. Use the provided notebook (**TestWeaviate.ipynb**) in Jupyter to copy the data into Weaviate.
 
 ### 10. Query your data
 Using Jupyter Notebooks, you can now query your data and confirm vectors are there.
