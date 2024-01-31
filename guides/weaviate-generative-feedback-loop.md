@@ -9,16 +9,15 @@ tags: Weaviate, Containers, Ollama, Mistral, LLM, vectors, vectorizer, embedding
 
 # Weaviate Generative Feedback Loop
 
-
 ## Overview 
 Duration: 2-3 hours
 
-[Weaviate](https://weaviate.io/) is an open source, AI-native vector database that helps developers create intuitive and reliable AI-powered applications. In this quickstart, we will deploy Weaviate, Ollama, Mistral LLM, and a text-2-vec vecetorizer within of Snowpark Container Services (SPCS), along with a Jupyter server. Using these services, we will generate product data from reviews with an LLM, then use it to create a unique search experience for users to search for experiences with products.
+[Weaviate](https://weaviate.io/) is an open source, AI-native vector database that helps developers create intuitive and reliable AI-powered applications. In this guide, we will deploy Weaviate, a text-2-vec vectorizer, the Mistral LLM served by Ollama, and a Jupyter Notebook server all within Snowpark Container Services (SPCS). Using these services, we will summarize product reviews with an LLM, then use these product summaries to create a unique search experience that allows users to search by more than just keywords, but instead by how it feels to interact with certain products.
 
 ### What You Will Learn 
 
 - How to build and deploy Weaviate, Ollama, a text-2-vec vectorizer module and Jupyter in Snowpark container services
-- How to create a generative feedback loop with a locally installed LLM
+- How to create a generative feedback loop with an LLM and a vector database
 - How to automatically create embeddings (vectors) for your searchable data
 - How to use volume mounts to persist changes in the file system
 - How to load data from Snowflake into a Weaviate vector database
@@ -44,20 +43,111 @@ Duration: 2-3 hours
 - A Jupyter Notebook to load review data into Snowflake then generate new product data using an LLM
 - A Jupyter Notebook to load and query/search a collection of products
 
-
-
 ## Prerequisites
 
-- (optional) The [weaviate-on-spcs](https://quickstarts.snowflake.com/guide/weaviate-on-spcs/index.html) quickstart
+- (optional) The [weaviate-on-spcs](weaviate-on-spcs.md) guide
 
-- [SFGUIDE-WEAVIATE-ON-SPCS](https://github.com/Snowflake-Labs/sfguide-getting-started-weaviate-on-spcs) repo
-  - Within the repo is a **cookbooks** folder and all required files can be found in the "**cookbooks/Ollama**" folder
+- [Product review dataset](https://www.kaggle.com/datasets/eswarchandt/amazon-music-reviews) from Kaggle
 
-- [Ollama](https://github.com/jmorganca/ollama) repository so you can build a docker image
+These steps are only shown as an example, and following along with the example may require additional rights to third-party data, products, or services that are not owned or provided by Snowflake. Please ensure that you have the appropriate rights in third-party data, products, or services before continuing.
 
-- [Product review dataset](https://www.kaggle.com/datasets/eswarchandt/amazon-music-reviews)
 
-These steps are only shown as an example, and following along with the example may require additional rights to third-party data, products, or services that are not owned or provided by Snowflake.  Please ensure that you have the appropriate rights in third-party data, products, or services before continuing.
+## Log into Snowflake
+
+Download the [SnowSQL](https://docs.snowflake.com/en/user-guide/snowsql) client. Use the SnowSQL client to connect to Snowflake.
+
+```bash  
+snowsql -a "YOURINSTANCE" -u "YOURUSER"
+```
+
+It is recommended that you use SnowSQL because you will be uploading files from your local machine to your Snowflake account.
+
+## Set up environment
+
+Set up OAUTH integration. This will allow Snowflake to authenticate users of your service.
+
+```sql
+-- OAuth Integration --
+USE ROLE ACCOUNTADMIN;
+CREATE SECURITY INTEGRATION SNOWSERVICES_INGRESS_OAUTH
+  TYPE=oauth
+  OAUTH_CLIENT=snowservices_ingress
+  ENABLED=true;
+```
+
+Give the SYSADMIN the ability to bind service endpoints. This will allow the SYSADMIN to create services.
+
+```sql
+-- Bind Service Grant
+USE ROLE ACCOUNTADMIN;
+GRANT BIND SERVICE ENDPOINT ON ACCOUNT TO ROLE SYSADMIN;
+```
+
+Create a role, and a user, for the Weaviate instance. We will use this user to log into our Jupyter service later.
+
+```sql
+-- Weaviate Role --
+USE ROLE SECURITYADMIN;
+CREATE ROLE WEAVIATE_ROLE;
+
+-- Weaviate User --
+USE ROLE USERADMIN;
+CREATE USER weaviate_user
+  PASSWORD='weaviate123'
+  DEFAULT_ROLE = WEAVIATE_ROLE
+  DEFAULT_SECONDARY_ROLES = ('ALL')
+  MUST_CHANGE_PASSWORD = FALSE;
+
+-- Grant Role to User --
+USE ROLE SECURITYADMIN;
+GRANT ROLE WEAVIATE_ROLE TO USER weaviate_user;
+```
+
+To configure your own instance, edit these fields before you run the SQL code.
+
+- Add a user
+- Add a role
+- Edit the `PASSWORD` field
+
+Create a warehouse for processing data in Snowflake.
+
+```sql
+-- Weaviate Warehouse --
+USE ROLE SYSADMIN;
+CREATE OR REPLACE WAREHOUSE WEAVIATE_WAREHOUSE WITH
+  WAREHOUSE_SIZE='X-SMALL'
+  AUTO_SUSPEND = 180
+  AUTO_RESUME = true
+  INITIALLY_SUSPENDED=true;
+```
+
+Create a database, image repository and stages. The image repository will house our container images, and stages will serve as a home for our service specification files, as well as files created and saved on the service. We will also create our stage for the product review data here.
+
+```sql
+-- Weaviate Database --
+-- + image repo --
+-- + stages --
+USE ROLE SYSADMIN;
+CREATE DATABASE IF NOT EXISTS WEAVIATE_DEMO;
+USE DATABASE WEAVIATE_DEMO;
+CREATE IMAGE REPOSITORY WEAVIATE_DEMO.PUBLIC.WEAVIATE_REPO;
+CREATE OR REPLACE STAGE YAML_STAGE;
+CREATE OR REPLACE STAGE DATA ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE');
+CREATE OR REPLACE STAGE FILES ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE');
+CREATE OR REPLACE STAGE REVIEW_DATA ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE');
+```
+
+Grant privileges on the databases to the WEAVIATE_ROLE:
+
+```sql
+-- Grants for Weaviate Role --
+USE ROLE SECURITYADMIN;
+GRANT ALL PRIVILEGES ON DATABASE WEAVIATE_DEMO TO WEAVIATE_ROLE;
+GRANT ALL PRIVILEGES ON SCHEMA WEAVIATE_DEMO.PUBLIC TO WEAVIATE_ROLE;
+GRANT ALL PRIVILEGES ON WAREHOUSE WEAVIATE_WAREHOUSE TO WEAVIATE_ROLE;
+GRANT ALL PRIVILEGES ON STAGE WEAVIATE_DEMO.PUBLIC.FILES TO WEAVIATE_ROLE;
+GRANT ALL PRIVILEGES ON STAGE WEAVIATE_DEMO.PUBLIC.REVIEW_DATA TO WEAVIATE_ROLE;
+```
 
 ## Loading Data
 
@@ -68,46 +158,12 @@ Dataset:
 
 These steps are only shown as an example, and following along with the example may require additional rights to third-party data, products, or services that are not owned or provided by Snowflake.  Please ensure that you have the appropriate rights in third-party data, products, or services before continuing.
 
-```SQL
-------------LOGIN---------
-snowsql -a "YOURINSTANCE" -u "YOURUSER"
-```
-```SQL
-------------Create User/Role---------
-USE ROLE ACCOUNTADMIN;
-CREATE SECURITY INTEGRATION SNOWSERVICES_INGRESS_OAUTH
-  TYPE=oauth
-  OAUTH_CLIENT=snowservices_ingress
-  ENABLED=true;
+We'll create a CSV file format that reflects our dataset.
 
-CREATE USER weaviate_user PASSWORD='weaviate123' DEFAULT_ROLE = WEAVIATE_ROLE DEFAULT_SECONDARY_ROLES = ('ALL') MUST_CHANGE_PASSWORD = FALSE;
-
-GRANT ROLE WEAVIATE_ROLE TO USER weaviate_user;
-
-ALTER USER weaviate_user SET DEFAULT_ROLE = WEAVIATE_ROLE;
-
-```
-```SQL
-------CREATE PRODUCT REVIEWS DATABASE -----
+```sql
+-- File format --
 USE ROLE SYSADMIN;
-
-CREATE OR REPLACE WAREHOUSE WEAVIATE_WAREHOUSE WITH
-  WAREHOUSE_SIZE='X-SMALL'
-  AUTO_SUSPEND = 180
-  AUTO_RESUME = true
-  INITIALLY_SUSPENDED=false;
-
-CREATE DATABASE IF NOT EXISTS WEAVIATE_PRODUCT_REVIEWS;
-
-GRANT all on database WEAVIATE_PRODUCT_REVIEWS to role WEAVIATE_ROLE;
-
-USE DATABASE WEAVIATE_PRODUCT_REVIEWS;
-
-```
-
-```SQL
---------CREATE FILE FORMAT  -----
-
+USE DATABASE WEAVIATE_DEMO;
 create or replace file format my_csv_format 
   type = csv 
   field_delimiter = ',' 
@@ -115,317 +171,547 @@ create or replace file format my_csv_format
   null_if = ('NULL', 'null') 
   FIELD_OPTIONALLY_ENCLOSED_BY='"'
   empty_field_as_null = true;
-
------CREATE STAGE--------
-
-CREATE OR REPLACE STAGE REVIEW_DATA ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE');
-
-grant all PRIVILEGES on stage REVIEW_DATA to WEAVIATE_ROLE;
-grant all PRIVILEGES on schema PUBLIC to WEAVIATE_ROLE;
-grant all on schema PUBLIC to role WEAVIATE_ROLE;
-
-----------PUT FILE INTO STAGE ------------
-PUT file:///YOUR/PATH/Musical_instruments_reviews.csv @REVIEW_DATA overwrite=true;
-```
-```SQL
-------------COPY DATA INTO SNOWFLAKE TABLES------------
-COPY INTO PRODUCT_REVIEWS FROM @REVIEW_DATA FILE_FORMAT = (format_name = 'my_csv_format' , error_on_column_count_mismatch=false)
- pattern = '.*Musical_instruments_reviews.csv.gz' on_error = 'skip_file';
 ```
 
+Then we will upload our data to the `PRODUCT_REVIEWS` stage:
 
-<b>NOTE:</b> This data only includes reviews and has no product information except the ASIN, a unique identifier that Amazon uses for each product.
-
-
-![alt_text](assets/image8.png "image_tooltip")
-
-## Create Docker Images
-
-First, create a stage for docker images and upload the required YAML files.
-
-```SQL
---Create an image repo
-CREATE OR REPLACE IMAGE REPOSITORY WEAVIATE_PRODUCT_REVIEWS.PUBLIC.WEAVIATE_REPO;
-
---upload yaml files
-PUT file:///<PATH>spec-jupyter.yaml @yaml_stage overwrite=true auto_compress=false;
-PUT file:///<PATH>spec-text2vec.yaml @yaml_stage overwrite=true auto_compress=false;
-PUT file:///<PATH>spec-weaviate.yaml @yaml_stage overwrite=true auto_compress=false;
-PUT file:///<PATH>spec-ollama.yaml @yaml_stage overwrite=true auto_compress=false;
-```
-### Get Ollama
-
-For this quickstart, we are using Ollama to host the LLM model, download their repo so you can build the Docker image.  You can download the repo here:
-
-[https://github.com/jmorganca/ollama](https://github.com/jmorganca/ollama)
-
-### Create Ollama Docker Image
-
-Once you download the repo, cpoy all the contents of the “**Cookbooks/Ollama/OllamaDocker**” folder into the Ollama Repo and overwrite the files as necessary.  
-
-After the files were copied, navigate to the Ollama repo and used the following command to create the Ollama image.  
-
-Login to Docker first:
-```SHELL
-docker login ACCOUNT-ORG.registry.snowflakecomputing.com -u USERNAME
+```sql
+-- Put file into stage --
+USE ROLE SYSADMIN;
+USE DATABASE WEAVIATE_DEMO;
+USE SCHEMA PUBLIC;
+PUT file:///path/to/Musical_instruments_reviews.csv @REVIEW_DATA overwrite=true;
 ```
 
-Build the image
-```SHELL
-docker build --rm --platform linux/amd64 -t ollama .
+Then we will create the table to which we load the product review data.
+
+```sql
+-- Tables --
+USE ROLE SYSADMIN;
+USE DATABASE WEAVIATE_DEMO;
+USE SCHEMA PUBLIC;
+
+CREATE OR REPLACE TABLE 
+    PRODUCT_REVIEWS (REVIEWERID varchar, ASIN varchar, 
+    REVIEWERNAME varchar, HELPFUL varchar, 
+    REVIEWTEXT varchar, OVERALL varchar, 
+    SUMMARY varchar, UNIXREVIEWTIME varchar, REVIEWTIME varchar);
 ```
 
-Tag and upload the image
-```SHELL
-#Tag
-docker tag ollama <SNOWACCOUNT-SNOWORG>.registry.snowflakecomputing.com/weaviate_product_reviews/public/weaviate_repo/ollama
-#Push
-docker push <SNOWACCOUNT-SNOWORG>.registry.snowflakecomputing.com/weaviate_product_reviews/public/weaviate_repo/ollama
+Next, we will load our stage data into the table.
 
-```
-### Upload YAML
-Back in Snowflake, upload the YAML file for the image to use.
-
-```SQL
-PUT file:///YOUR/PATH/Docker/spec-ollama.yaml @yaml_stage overwrite=true auto_compress=false overwrite=true;
-```
-### Add images for Weaviate, text-2-vec, and jupyter
-
-Following the same steps as above, create, tag, and upload images for the remaining services we will create.
-
-```SHELL
-#----weaviate------
-docker build --rm --platform linux/amd64 -t weaviate -f weaviate.Dockerfile . 
-docker tag weaviate <SNOWACCOUNT-SNOWORG>.registry.snowflakecomputing.com/weaviate_product_reviews/public/weaviate_repo/weaviate
-docker push <SNOWACCOUNT-SNOWORG>.registry.snowflakecomputing.com/weaviate_product_reviews/public/weaviate_repo/weaviate
-
-#----text2vec------
-docker build --rm --platform linux/amd64 -t text2vec -f text2vec.Dockerfile . 
-docker tag text2vec <SNOWACCOUNT-SNOWORG>.registry.snowflakecomputing.com/weaviate_product_reviews/public/weaviate_repo/text2vec
-docker push <SNOWACCOUNT-SNOWORG>.registry.snowflakecomputing.com/weaviate_product_reviews/public/weaviate_repo/text2vec
-
-#--------Jupyter-------
-docker build --rm --platform linux/amd64 -t jupyter -f jupyter.Dockerfile . 
-docker tag jupyter <SNOWACCOUNT-SNOWORG>.registry.snowflakecomputing.com/weaviate_product_reviews/public/weaviate_repo/jupyter
-docker push <SNOWACCOUNT-SNOWORG>.registry.snowflakecomputing.com/weaviate_product_reviews/public/weaviate_repo/jupyter
-
-
-```
-## Start Services
-
-Once the docker images and yaml files are all uploaded, .
-
-### Create Compute Pool
-```SQL
-CREATE COMPUTE POOL OLLAMA_POOL
-MIN_NODES = 1
-MAX_NODES = 1
-INSTANCE_FAMILY = GPU_NV_M;
+```sql
+USE ROLE SYSADMIN;
+USE DATABASE WEAVIATE_DEMO;
+USE SCHEMA PUBLIC;
+COPY INTO PRODUCT_REVIEWS FROM @REVIEW_DATA FILE_FORMAT = (format_name = 'my_csv_format' , error_on_column_count_mismatch=false);
 ```
 
+Let's quickly confirm our data is in the table.
 
-
-### Wait for Pool to start
-Make sure to wait for the compute pool to be in “Idle” state before creating the service.  You can see the state with the following command:
-```
-DESCRIBE COMPUTE POOL OLLAMA_POOL;
-```
-
-### Run on GPUs
-In this example, we are using a Medium NVIDIA GPU class instance for the compute pool.  Ollama has the flexibility to be able to handle both CPU and GPU instances, but GPUs are best for an LLM. 
-
-For a list of available instance types you can spin up in SPCS, check out [this page](https://docs.snowflake.com/en/sql-reference/sql/create-compute-pool).
-
-**Note:** there are two settings in the YAML file are are needed to take advantage of the GPUs:
-
-
-```
-ENABLE_CUDA: 1
-NVIDIA_VISIBLE_DEVICES : all
+```sql
+-- Confirm data --
+USE ROLE SYSADMIN;
+USE WAREHOUSE WEAVIATE_WAREHOUSE;
+SELECT * FROM WEAVIATE_DEMO.PUBLIC.PRODUCT_REVIEWS; 
 ```
 
-## Log into Jupyter
-The Ollama image has Jupyter notebooks installed on it locally. This is so you can run through the code to create the data, then shut down the entire instance since we don’t need it to support the search.
+Finally, we will ensure our `WEAVIATE_ROLE` has necessary permissions to work with this table.
 
-You can check the status of the service by running:
-
-
-```
-show services;
+```sql
+-- Grants for Weaviate Role --
+USE ROLE SECURITYADMIN;
+GRANT SELECT ON TABLE WEAVIATE_DEMO.PUBLIC.PRODUCT_REVIEWS TO ROLE WEAVIATE_ROLE;
 ```
 
-### Get Jupyter Key From Logs
-Once the service is running, grant permission to it and log into the Jupyter notebook interface. To do so, you first need to grab the Jupyter Notebooks key.  Do this by looking at the log for the service by running these commands:
+## Deploying Jupyter
 
+The first service we will deploy is Jupyter.
 
-```
-GRANT USAGE ON SERVICE OLLAMA TO ROLE WEAVIATE_ROLE;
+### Build and push the image
 
-CALL SYSTEM$GET_SERVICE_LOGS('WEAVIATE_PRODUCT_REVIEWS.PUBLIC.OLLAMA', '0', 'ollama');
-```
+First, we build the image.
 
-When running this command you should see a log displayed with some information about Jupyter Notebooks and a key.  **Copy that key**, you will need it in the next step.  
-
-### Access Jupyter Notebooks
-
-Get the Jupyter endpoint on the Ollama service by running this command:
-
-```
-SHOW ENDPOINTS IN SERVICE OLLAMA;
-```
-This shows the endpoints for Ollama and Jupyter.  Grab the URL for the Jupyter endpoint and paste it into a browser. 
-
-Using the Snowflake Login we set up earlier,  log into the Jupyter endpoint, then, using the key from above, log in to the Jupyter Notebooks interface.  It should load a file browser like in the screenshot below:
-
-![alt_text](assets/image1.png "jupter notebooks login")
-
-## Start Ollama Service and Mistral Model
-
-Once logged in to Jupyter, launch a Terminal window with the top menu: 
-
-![alt_text](assets/image10.png "launch terminal")
-
-
-Run the following command to start the Ollama server:
-
-```
-/bin/ollama serve
-```
-![alt_text](assets/image2.png "image_tooltip")
-
-You should see messages about how Ollama has detected the GPUs and has successfully started.
-
-Then, launch a **second** Terminal window from Jupyter.
-
-In this window run the command to launch the Mistral model:
-
-```
-ollama run mistral
+```sh
+docker build --rm --platform linux/amd64 -t jupyter ./images/jupyter
 ```
 
-This will take a few minutes to download the latest model and will eventually provide you with a prompt to test it out
+Next we will retrieve our repository URL by issuing the following command in our Snowflake client.
 
-
-![alt_text](assets/image11.png "run the mistral model on ollama")
-
-## Generate Product Data with Mistral
-
-Back in Jupyter Notebooks, load the provided notebook: **Ollama/Create_Product_Descriptions.ipynb.**
-
-The first few steps loads the libraries needed and creates the connection into Snowflake.
-
-
-![alt_text](assets/image9.png "load libraries")
-
-### Create Prompts
-Then load all the review data by using a distinct list of ASINs.  For each ASIN create a prompt using the first 20 reviews. 
-
-**Note:**This part can be easily configured since we are using a pandas dataframe, and you may want to take the top 20 most _recent_ reviews instead of the first 20.
-
-### Send to Mistral
-
-Once I created the prompts, I needed to send them each to our local Mistal model and ask it to respond back with JSON that I could use to insert back into Snowflake.
-
-
-
-
-### Send the Generated Data to Snowflake
-
-Sometimes the LLM provides additional fields that we didn’t ask for, or objects instead of strings, but that’s okay – it can be removed before we send it to Snowflake.
-
-You should see the message “Data inserted into Snowflake!” if everything went well. 
-
-
-![alt_text](assets/image13.png "image_tooltip")
-
-### Confirm Generated Data is in Snowflake
-
-Back in Snowflake check the table to make sure all the data made it over.  Once you have confirmed you have the data, you can spin down the LLM
-
-![alt_text](assets/image3.png "generated data")
-
-
-```
-DROP SERVICE OLLAMA;
-DROP COMPUTE POOL OLLAMA_POOL;
+```sql
+USE ROLE SYSADMIN;
+USE DATABASE WEAVIATE_DEMO;
+USE SCHEMA PUBLIC;
+SHOW IMAGE REPOSITORIES;
 ```
 
+The result will include a `repository_url`, which will look something like `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.comregistry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo`.
 
-## Send Product Data to Weaviate
+Next, we'll tag the image using this repository URL.
 
-Now that we have our new PRODUCTS table we need to send it to Weaviate and vectorize the data.
+```sh
+docker tag jupyter <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.comregistry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/jupyter
+```
 
-### Spin up Weaviate, Jupyter, and Text2Vec
+To push to our registry, we will first need to log in.
 
-Next, spin up resources for Weaviate, Jupyter Notebooks, and the Text2Vec vectorizer module.  Follow the same process as before and create the compute pools, wait for them to go into the Idle state, then create the services.
+```sh
+docker login <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com  -u YOUR_SNOWFLAKE_USERNAME
+```
 
+Finally, we push the image.
 
-```SQL
----Create the rest of the services------
-CREATE COMPUTE POOL IF NOT EXISTS WEAVIATE_COMPUTE_POOL
-  MIN_NODES = 1
-  MAX_NODES = 1
-  INSTANCE_FAMILY = CPU_X64_S
-  AUTO_RESUME = true;
+```sh
+docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.comregistry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/jupyter
+```
 
-CREATE COMPUTE POOL IF NOT EXISTS TEXT2VEC_COMPUTE_POOL
-  MIN_NODES = 1
-  MAX_NODES = 1
-  INSTANCE_FAMILY = GPU_NV_S
-  AUTO_RESUME = true;
+### Update and push the spec
 
+With our image in our repository, we will next have to update the [Jupyter spec file](../specs/jupyter.yaml), which is the specificiation that SPCS will use to create our Jupyter service. Within that spec, is an entry for `image`, which looks like this:
+
+```yaml
+image: "<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/jupyter"
+```
+
+Update the `image` entry and replace `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>` with your Snowflake acccount and Snowflake org, which you retrieved earlier with `SHOW IMAGE REPOSITORIES`.
+
+Once you have updated and saved the Jupyter spec file, you can upload it to your existing `YAML_STAGE`.
+
+```sh
+USE ROLE SYSADMIN;
+USE DATABASE WEAVIATE_DEMO;
+USE SCHEMA PUBLIC;
+PUT file:///path/to/jupyter.yaml @yaml_stage overwrite=true auto_compress=false;
+```
+
+### Provision the compute pool
+
+Our service will need to run on a compute pool. We will create a dedicated compute pool for the Jupyter service:
+
+```sql
+-- Compute Pool --
+USE ROLE SYSADMIN;
 CREATE COMPUTE POOL IF NOT EXISTS JUPYTER_COMPUTE_POOL
   MIN_NODES = 1
   MAX_NODES = 1
   INSTANCE_FAMILY = CPU_X64_S
   AUTO_RESUME = true;
 
+DESCRIBE COMPUTE POOL JUPYTER_COMPUTE_POOL;
+```
 
-CREATE SERVICE WEAVIATE
-  IN COMPUTE POOL WEAVIATE_COMPUTE_POOL 
-  FROM @YAML_STAGE
-  SPEC='spec-weaviate.yaml'
-  MIN_INSTANCES=1
-  MAX_INSTANCES=1;
+Before moving to onto the next step, ensure that the `state` shown in the output of `DESCRIBE COMPUTE POOL JUPYTER_COMPUTE_POOL` shows `IDLE` or `RUNNING`.
 
+### Deploy the service
+
+Next, we will deploy our service to our compute pool, using the Jupyter spec we uploaded to the `YAML_STAGE`.
+
+```sql
+-- Service --
+USE ROLE SYSADMIN;
+USE DATABASE WEAVIATE_DEMO;
+USE SCHEMA PUBLIC;
 CREATE SERVICE JUPYTER
   IN COMPUTE POOL JUPYTER_COMPUTE_POOL 
   FROM @YAML_STAGE
-  SPEC='spec-jupyter.yaml'
+  SPEC='jupyter.yaml'
   MIN_INSTANCES=1
   MAX_INSTANCES=1;
+```
 
+We must also ensure the `WEAVIATE_ROLE` has the permissions necessary to use this service.
+
+```sql
+-- Usage for Weaviate Role --
+USE ROLE SECURITYADMIN;
+GRANT USAGE ON SERVICE WEAVIATE_DEMO.PUBLIC.JUPYTER TO ROLE WEAVIATE_ROLE;
+```
+
+### Confirm the service works
+
+Becuase the Jupyter service is one we can access with via its public endpoint, we can retrieve that endpoint with the following command:
+
+```sql
+-- Get public Jupyter URL --
+USE ROLE SYSADMIN;
+SHOW ENDPOINTS IN SERVICE WEAVIATE_DEMO.PUBLIC.JUPYTER;
+```
+
+Once the endpoint has been provisioned, we can take the resulting public endpoint, availble in the output of `SHOW ENDPOINTS IN SERVICE WEAVIATE_DEMO.PUBLIC.JUPYTER`, located under `ingress_url` and log into the Jupyter service, using our `WEAVIATE_USER`.
+
+And with that, our first service is deployed!
+
+## Deploying Ollama
+
+Ollama will be responsible for serving the Mistral LLM. We will use the Ollama service and the Mistral LLM to summarise our product reviews before sending them to Weaviate. The steps to deploy Ollama are similar to the steps to deploy Jupyter.
+
+### Build and push the image
+
+First, we build the image.
+
+```sh
+docker build --rm --platform linux/amd64 -t ollama ./images/ollama
+```
+
+Next we will retrieve our repository URL by issuing the following command in our Snowflake client.
+
+```sql
+USE ROLE SYSADMIN;
+USE DATABASE WEAVIATE_DEMO;
+USE SCHEMA PUBLIC;
+SHOW IMAGE REPOSITORIES;
+```
+
+The result will include a `repository_url`, which will look something like `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.comregistry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo`.
+
+Next, we'll tag the image using this repository URL.
+
+```sh
+docker tag ollama <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.comregistry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/ollama
+```
+
+To push to our registry, we will first need to log in.
+
+```sh
+docker login <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com  -u YOUR_SNOWFLAKE_USERNAME
+```
+
+Finally, we push the image.
+
+```sh
+docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.comregistry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/ollama
+```
+
+### Update and push the spec
+
+With our image in our repository, we will next have to update the [Ollama spec file](../specs/ollama.yaml), which is the specificiation that SPCS will use to create our Jupyter service. Within that spec, is an entry for `image`, which looks like this:
+
+```yaml
+image: "<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/ollama"
+```
+
+Update the `image` entry and replace `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>` with your Snowflake acccount and Snowflake org, which you retrieved earlier with `SHOW IMAGE REPOSITORIES`.
+
+Once you have updated and saved the Ollama spec file, you can upload it to your existing `YAML_STAGE`.
+
+```sh
+USE ROLE SYSADMIN;
+USE DATABASE WEAVIATE_DEMO;
+USE SCHEMA PUBLIC;
+PUT file:///path/to/ollama.yaml @yaml_stage overwrite=true auto_compress=false;
+```
+
+### Provision the compute pool
+
+Our service will need to run on a compute pool. We will create a dedicated compute pool for the Ollama service:
+
+```sql
+-- Compute Pool --
+USE ROLE SYSADMIN;
+CREATE COMPUTE POOL OLLAMA_POOL
+  MIN_NODES = 1
+  MAX_NODES = 1
+  INSTANCE_FAMILY = GPU_NV_M;
+
+DESCRIBE COMPUTE POOL OLLAMA_POOL;
+```
+
+In this example, we are using a Medium NVIDIA GPU class instance for the compute pool. Ollama has the flexibility to be able to handle both CPU and GPU instances, but GPUs are best for an LLM. 
+
+For a list of available instance types you can spin up in SPCS, check out [this page](https://docs.snowflake.com/en/sql-reference/sql/create-compute-pool).
+
+There are two settings we had set in the YAML spec that are needed to take advantage of the GPUs:
+
+```yaml
+ENABLE_CUDA: 1
+NVIDIA_VISIBLE_DEVICES : all
+```
+
+Before moving to onto the next step, ensure that the `state` shown in the output of `DESCRIBE COMPUTE POOL OLLAMA_POOL` shows `IDLE` or `RUNNING`.
+
+### Deploy the service
+
+Next, we will deploy our service to our compute pool, using the Ollama spec we uploaded to the `YAML_STAGE`.
+
+```sql
+-- Service --
+USE ROLE SYSADMIN;
+USE DATABASE WEAVIATE_DEMO;
+USE SCHEMA PUBLIC;
+CREATE SERVICE  OLLAMA
+  IN COMPUTE POOL OLLAMA_POOL
+  FROM @YAML_STAGE
+  SPEC='ollama.yaml'
+  MIN_INSTANCES=1
+  MAX_INSTANCES=1;
+```
+
+### Confirm the service works
+
+Becuase the Ollama service will only be accessed from within the Snowflake network, there is no ingress url. To see if the service is up and running, we will use the `SYSTEM$GET_SERVICE_STATUS` command.
+
+```sql
+USE ROLE SYSADMIN;
+USE DATABASE WEAVIATE_DEMO;
+USE SCHEMA PUBLIC;
+CALL SYSTEM$GET_SERVICE_STATUS('ollama');
+```
+
+In the output of `SYSTEM$GET_SERVICE_STATUS('ollama')`, you will see a `status` of `READY`, and that means our Ollama server is ready to serve the Mistral LLM!
+
+## Generating Summaries
+
+From the Juptyer Service, access the `Create_Product_Descriptions.ipynb` notebook. And run through the cells to generate your product reviews. In short, the notebook does the following:
+
+1. Establishes a Snowpark connection.
+2. Takes the first 20 reviews for each ASIN and sends these to Mistral LLM for summary.
+3. Saves the results back to a table `WEAVIATE_DEMO.PUBLIC.PRODUCT_REVIEWS`
+
+You can hop back into your Snowflake client and see the results:
+
+```sql
+USE ROLE WEAVIATE_ROLE;
+USE WAREHOUSE WEAVIATE_WAREHOUSE;
+SELECT * FROM WEAVIATE_DEMO.PUBLIC.PRODUCTS;
+```
+
+![alt_text](assets/image3.png "generated data")
+
+The provided notebook includes the first 50 ASINs. If you want to process more ASINs (there are hundreds!), you can update the `product_record_limit` that is configured at the top of the notebook.
+
+Now we can spin down this LLM!
+
+## Shutting Down the Ollama Service and Compute Pool
+
+At this point, our product summaries are are stored in the table `WEAVIATE_DEMO.PUBLIC.PRODUCTS`, and we no longer require the Ollama service. To save resources (and Snowflake credits!) we will shut down our Ollama service and the dedicated GPU compute pool that we provisioned for it.
+
+We can do this in just a few lines.
+
+```sql
+-- Drop Ollama Service and Compute Pool --
+USE ROLE SYSADMIN;
+DROP SERVICE WEAVIATE_DEMO.PUBLIC.OLLAMA;
+DROP COMPUTE POOL OLLAMA POOL;
+```
+
+## Deploying Text2Vec
+
+Next, we will Text2Vec, a neccessary service for Weaviate to be able to generate vectors.
+
+### Build and push the image
+
+First, we build the image.
+
+```sh
+docker build --rm --platform linux/amd64 -t text2vec ./images/text2vec
+```
+
+Next we will retrieve our repository URL by issuing the following command in our Snowflake client.
+
+```sql
+USE ROLE SYSADMIN;
+USE DATABASE WEAVIATE_DEMO;
+USE SCHEMA PUBLIC;
+SHOW IMAGE REPOSITORIES;
+```
+
+The result will include a `repository_url`, which will look something like `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.comregistry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo`.
+
+Next, we'll tag the image using this repository URL.
+
+```sh
+docker tag text2vec <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.comregistry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/text2vec
+```
+
+To push to our registry, we will first need to log in.
+
+```sh
+docker login <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com  -u YOUR_SNOWFLAKE_USERNAME
+```
+
+Finally, we push the image.
+
+```sh
+docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.comregistry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/text2vec
+```
+
+### Update and push the spec
+
+With our image in our repository, we will next have to update the [Text2Vec spec file](../specs/text2vec.yaml), which is the specificiation that SPCS will use to create our Jupyter service. Within that spec, is an entry for `image`, which looks like this:
+
+```yaml
+image: "<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/text2vec"
+```
+
+Update the `image` entry and replace `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>` with your Snowflake acccount and Snowflake org, which you retrieved earlier with `SHOW IMAGE REPOSITORIES`.
+
+Once you have updated and saved the Text2Vec spec file, you can upload it to your existing `YAML_STAGE`.
+
+```sh
+USE ROLE SYSADMIN;
+USE DATABASE WEAVIATE_DEMO;
+USE SCHEMA PUBLIC;
+PUT file:///path/to/text2vec.yaml @yaml_stage overwrite=true auto_compress=false;
+```
+
+### Provision the compute pool
+
+Our service will need to run on a compute pool. We will create a dedicated compute pool for the Text2Vec service:
+
+```sql
+-- Compute Pool --
+CREATE COMPUTE POOL IF NOT EXISTS TEXT2VEC_COMPUTE_POOL
+  MIN_NODES = 1
+  MAX_NODES = 1
+  INSTANCE_FAMILY = GPU_NV_S
+  AUTO_RESUME = true;
+
+DESCRIBE COMPUTE POOL TEXT2VEC_COMPUTE_POOL;
+```
+
+Before moving to onto the next step, ensure that the `state` shown in the output of `DESCRIBE COMPUTE POOL TEXT2VEC_COMPUTE_POOL` shows `IDLE` or `RUNNING`.
+
+### Deploy the service
+
+Next, we will deploy our service to our compute pool, using the Text2Vec spec we uploaded to the `YAML_STAGE`.
+
+```sql
+-- Service --
 CREATE SERVICE TEXT2VEC
   IN COMPUTE POOL TEXT2VEC_COMPUTE_POOL 
   FROM @YAML_STAGE
-  SPEC='spec-text2vec.yaml'
+  SPEC='text2vec.yaml'
   MIN_INSTANCES=1
   MAX_INSTANCES=1;
-
-
-```
-### Grant Permissions to the Services
-```SQL
-GRANT USAGE ON SERVICE JUPYTER TO ROLE WEAVIATE_ROLE;
-GRANT USAGE ON SERVICE WEAVIATE TO ROLE WEAVIATE_ROLE;
-GRANT USAGE ON SERVICE TEXT2VEC TO ROLE WEAVIATE_ROLE;
 ```
 
-### Log into Jupyter Notebooks Endpoint
-![alt_text](assets/image14.png "Services Ready")
-Once all the services were up and running, log into the Jupyter notebooks UI on the Jupyter service.  
+### Confirm the service works
 
-Follow the same process as last time and grab the key from the log, then use the key to login to Jupyter.
+Becuase the Text2Vec service will only be accessed from within the Snowflake network, there is no ingress url. To see if the service is up and running, we will use the `SYSTEM$GET_SERVICE_STATUS` command.
 
-**Note: ** Make sure you have closed the previous Jupyter window or you will get a token error
+```sql
+USE ROLE SYSADMIN;
+USE DATABASE WEAVIATE_DEMO;
+USE SCHEMA PUBLIC;
+CALL SYSTEM$GET_SERVICE_STATUS('text2vec');
+```
+
+Once Text2Vec has a `status` of `READY`, we can deploy Weaviate!
+
+## Deploying Weaviate
+
+Now, we will deploy Weaviate!
+
+### Build and push the image
+
+First, we build the image.
+
+```sh
+docker build --rm --platform linux/amd64 -t weaviate ./images/weaviate
+```
+
+Next we will retrieve our repository URL by issuing the following command in our Snowflake client.
+
+```sql
+USE ROLE SYSADMIN;
+USE DATABASE WEAVIATE_DEMO;
+USE SCHEMA PUBLIC;
+SHOW IMAGE REPOSITORIES;
+```
+
+The result will include a `repository_url`, which will look something like `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.comregistry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo`.
+
+Next, we'll tag the image using this repository URL.
+
+```sh
+docker tag weaviate <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.comregistry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/weaviate
+```
+
+To push to our registry, we will first need to log in.
+
+```sh
+docker login <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com  -u YOUR_SNOWFLAKE_USERNAME
+```
+
+Finally, we push the image.
+
+```sh
+docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.comregistry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/weaviate
+```
+
+### Update and push the spec
+
+With our image in our repository, we will next have to update the [Weaviate spec file](../specs/weaviate.yaml), which is the specificiation that SPCS will use to create our Jupyter service. Within that spec, is an entry for `image`, which looks like this:
+
+```yaml
+image: "<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/weaviate"
+```
+
+Update the `image` entry and replace `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>` with your Snowflake acccount and Snowflake org, which you retrieved earlier with `SHOW IMAGE REPOSITORIES`.
+
+Once you have updated and saved the Weaviate spec file, you can upload it to your existing `YAML_STAGE`.
+
+```sh
+USE ROLE SYSADMIN;
+USE DATABASE WEAVIATE_DEMO;
+USE SCHEMA PUBLIC;
+PUT file:///path/to/weaviate.yaml @yaml_stage overwrite=true auto_compress=false;
+```
+
+### Provision the compute pool
+
+Our service will need to run on a compute pool. We will create a dedicated compute pool for the Weaviate service:
+
+```sql
+-- Compute Pool --
+CREATE COMPUTE POOL IF NOT EXISTS WEAVIATE_COMPUTE_POOL
+  MIN_NODES = 1
+  MAX_NODES = 1
+  INSTANCE_FAMILY = CPU_X64_S
+  AUTO_RESUME = true;
+
+DESCRIBE COMPUTE POOL WEAVIATE_COMPUTE_POOL;
+```
+
+Before moving to onto the next step, ensure that the `state` shown in the output of `DESCRIBE COMPUTE POOL WEAVIATE_COMPUTE_POOL` shows `IDLE` or `RUNNING`.
+
+### Deploy the service
+
+Next, we will deploy our service to our compute pool, using the Weaviate spec we uploaded to the `YAML_STAGE`.
+
+```sql
+-- Service --
+USE ROLE SYSADMIN;
+USE DATABASE WEAVIATE_DEMO;
+USE SCHEMA PUBLIC;
+CREATE SERVICE WEAVIATE
+  IN COMPUTE POOL WEAVIATE_COMPUTE_POOL 
+  FROM @YAML_STAGE
+  SPEC='weaviate.yaml'
+  MIN_INSTANCES=1
+  MAX_INSTANCES=1;
+```
+
+### Confirm the service works
+
+Becuase the Weaviate service will only be accessed from within the Snowflake network, there is no ingress url. To see if the service is up and running, we will use the `SYSTEM$GET_SERVICE_STATUS` command.
+
+```sql
+USE ROLE SYSADMIN;
+USE DATABASE WEAVIATE_DEMO;
+USE SCHEMA PUBLIC;
+CALL SYSTEM$GET_SERVICE_STATUS('weaviate');
+```
+
+## Send Product Data to Weaviate
+
+Now, with our product summaries in our `PRODUCTES` table, we are ready to send this data to Weaviate and vectorize the data.
 
 ### Copy Data to Weaviate
 
-Open the file **Copy_Products_to_Weaviate.ipynb** notebook.
-
+In the Jupyter Notebook server, open the file **Copy_Products_to_Weaviate.ipynb** notebook.
 
 Run through the notebook and it will copy the newly generated data over to Weaviate.  Since Weaviate is set up to automatically use the Text2Vec vectorizer module, the data gets automatically vectorized as it lands in Weaviate.
-
 
 ## Search
 
@@ -433,50 +719,62 @@ Finally, try some queries on the data to test out Weaviate’s semantic and hybr
 
 ![alt_text](assets/image12.png "image_tooltip")
 
+## Conclusion
+
+Before we move on to clean up, you should really be impressed with what you did here! Using best-in-class tooling for AI workloads, you a meaningful and AI-powered product search engine. You provisioned both CPU and GPU resources for everything from Notebooks, to LLM servers, to vector databases! You used different sized compute for your different needs and you spun down resources when they were no longer needed. And your data never left the security boundary of your Snowflake instance. Way to go.
 
 ## Cleanup
 
-If you want to suspend the services you can do so with these commands:
+If you want to suspend the services (e.g. if you plan to revisit this work later) you can do so with these commands:
 
 ```SQL
-ALTER COMPUTE POOL OLLAMA_POOL SUSPEND;
-ALTER SERVICE OLLAMA SUSPEND;
-ALTER COMPUTE POOL WEAVIATE_POOL SUSPEND;
+USE ROLE SYSADMIN;
+USE DATABASE WEAVIATE_DEMO;
+USE SCHEMA PUBLIC;
 ALTER SERVICE WEAVIATE SUSPEND;
-...etc
+ALTER COMPUTE POOL WEAVIATE_COMPUTE_POOL SUSPEND;
+ALTER SERVICE TEXT2VEC SUSPEND;
+ALTER COMPUTE POOL TEXT2VEC_COMPUTE_POOL SUSPEND;
+ALTER SERVICE JUPYTER SUSPEND;
+ALTER COMPUTE POOL JUPYTER_COMPUTE_POOL SUSPEND;
 ```
-Cleanup...
 
-```SQL
-USE ROLE ACCOUNTADMIN;
+If you want to completely remove any object from this demo, you can run commands the below:
 
-DROP SERVICE WEAVIATE;
-DROP SERVICE JUPYTER;
-DROP SERVICE TEXT2VEC;
-DROP SERVICE OLLAMA;
+```sql
+-- Services --
+USE ROLE SYSADMIN;
+DROP SERVICE WEAVIATE_DEMO.PUBLIC.WEAVIATE;
+DROP SERVICE WEAVIATE_DEMO.PUBLIC.JUPYTER;
+DROP SERVICE WEAVIATE_DEMO.PUBLIC.TEXT2VEC;
+-- Uncomment below if you did not drop Ollama earlier
+-- DROP SERVICE WEAVIATE_DEMO.PUBLIC.OLLAMA;
 
+-- Compute Pools --
+USE ROLE SYSADMIN;
 DROP COMPUTE POOL WEAVIATE_COMPUTE_POOL;
 DROP COMPUTE POOL JUPYTER_COMPUTE_POOL;
 DROP COMPUTE POOL TEXT2VEC_COMPUTE_POOL;
-DROP COMPUTE POOL OLLAMA_POOL;
-```
-Cleanup everything...
-```SQL
-DROP IMAGE REPOSITORY WEAVIATE_PRODUCT_REVIEWS.PUBLIC.WEAVIATE_REPO;
+-- Uncomment below if you did not drop Ollama earlier
+-- DROP COMPUTE POOL OLLAMA_POOL;
 
-DROP DATABASE WEAVIATE_PRODUCT_REVIEWS.PUBLIC;
+-- Weaviate Database --
+USE ROLE SYSADMIN;
+DROP DATABASE WEAVIATE_DEMO;
 
+-- Weaviate Warehouse --
+USE ROLE SYSADMIN;
 DROP WAREHOUSE WEAVIATE_WAREHOUSE;
 
+-- Weaviate User --
+USE ROLE USERADMIN;
 DROP USER weaviate_user;
 
+-- Weaviate Role --
+USE ROLE SECURITYADMIN;
 DROP ROLE WEAVIATE_ROLE;
 
+-- OAuth Integration --
+USE ROLE ACCOUNTADMIN;
 DROP SECURITY INTEGRATION SNOWSERVICES_INGRESS_OAUTH;
 ```
-
-
-
-
-
-
