@@ -4,6 +4,7 @@ FROM jupyter/base-notebook:python-3.11
 RUN pip install requests weaviate-client snowflake-snowpark-python[pandas]
 #upgrade to v4 client for weaviate
 RUN pip install --pre -U "weaviate-client==4.*"
+RUN pip install ollama==0.1.5
 
 # Set the working directory
 WORKDIR /workspace/
