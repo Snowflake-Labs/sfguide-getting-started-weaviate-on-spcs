@@ -1,6 +1,0 @@
-snowflake-snowpark-python[pandas]
-typing_extensions
-pandas
-requests
-jupyterlab
-notebook
