@@ -2,17 +2,8 @@ spec:
   container:
   - name: ollama
     image: "<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/ollama"
-    volumeMounts:
-      - name: stage
-        mountPath: /workspace/stage
     env:
       LLM_MODEL: mistral
-      SNOW_ROLE: WEAVIATE_ROLE
-      SNOW_WAREHOUSE: WEAVIATE_WAREHOUSE
-      SNOW_DATABASE: WEAVIATE_DEMO
-      SNOW_SCHEMA: PUBLIC
-      SNOW_USER: WEAVIATE_USER
-      SNOW_PASSWORD: weaviate123
       ENABLE_CUDA: 1
       NVIDIA_VISIBLE_DEVICES : all
     resources:
@@ -22,12 +13,7 @@ spec:
       requests:
         memory: 188G
         nvidia.com/gpu: 4
-  volume:
-  - name: stage
-    source: "@REVIEW_DATA"
-    uid: 1000
-    gid: 1000
   endpoint:
-  - name: jupyter 
-    port: 8888
-    public: true
+  - name: ollama 
+    port: 11434
+
