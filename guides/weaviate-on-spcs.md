@@ -15,7 +15,7 @@ Download the [SnowSQL](https://docs.snowflake.com/en/user-guide/snowsql) client.
 snowsql -a "YOURINSTANCE" -u "YOURUSER"
 ```
 
-It is recommended that you use SnowSQL because you will be uploading files from your local machine to your Snowflake account.
+It is recommended that you use SnowSQL because you will be uploading files from your local machine to your Snowflake account, but you can also [upload files to stages directly from Snowsight, if you prefer](https://docs.snowflake.com/en/user-guide/data-load-local-file-system-stage-ui#upload-files-onto-a-named-internal-stage).
 
 ## 2. Set up environment
 
@@ -57,12 +57,6 @@ CREATE USER weaviate_user
 USE ROLE SECURITYADMIN;
 GRANT ROLE WEAVIATE_ROLE TO USER weaviate_user;
 ```
-
-To configure your own instance, edit these fields before you run the SQL code.
-
-- Add a user
-- Add a role
-- Edit the `PASSWORD` field
 
 Create a warehouse for processing data in Snowflake.
 

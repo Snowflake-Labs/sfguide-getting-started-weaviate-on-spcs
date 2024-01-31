@@ -12,11 +12,11 @@ tags: Weaviate, Containers, Ollama, Mistral, LLM, vectors, vectorizer, embedding
 ## Overview 
 Duration: 2-3 hours
 
-[Weaviate](https://weaviate.io/) is an open source, AI-native vector database that helps developers create intuitive and reliable AI-powered applications. In this guide, we will deploy Weaviate, a text-2-vec vectorizer, the Mistral LLM served by Ollama, and a Jupyter Notebook server all within Snowpark Container Services (SPCS). Using these services, we will summarize product reviews with an LLM, then use these product summaries to create a unique search experience that allows users to search by more than just keywords, but instead by how it feels to interact with certain products.
+[Weaviate](https://weaviate.io/) is an open source, AI-native vector database that helps developers create intuitive and reliable AI-powered applications. In this guide, we will deploy Weaviate, a Text2Vec vectorizer, the Mistral LLM served by Ollama, and a Jupyter Notebook server all within Snowpark Container Services (SPCS). Using these services, we will summarize product reviews with an LLM, then use these product summaries to create a unique search experience that allows users to search by more than just keywords, but instead by how it feels to interact with certain products.
 
 ### What You Will Learn 
 
-- How to build and deploy Weaviate, Ollama, a text-2-vec vectorizer module and Jupyter in Snowpark container services
+- How to build and deploy Weaviate, Ollama, a Text2Vec vectorizer module and Jupyter in Snowpark Container Services
 - How to create a generative feedback loop with an LLM and a vector database
 - How to automatically create embeddings (vectors) for your searchable data
 - How to use volume mounts to persist changes in the file system
@@ -60,7 +60,7 @@ Download the [SnowSQL](https://docs.snowflake.com/en/user-guide/snowsql) client.
 snowsql -a "YOURINSTANCE" -u "YOURUSER"
 ```
 
-It is recommended that you use SnowSQL because you will be uploading files from your local machine to your Snowflake account.
+It is recommended that you use SnowSQL because you will be uploading files from your local machine to your Snowflake account, but you can also [upload files to stages directly from Snowsight, if you prefer](https://docs.snowflake.com/en/user-guide/data-load-local-file-system-stage-ui#upload-files-onto-a-named-internal-stage).
 
 ## Set up environment
 
@@ -102,12 +102,6 @@ CREATE USER weaviate_user
 USE ROLE SECURITYADMIN;
 GRANT ROLE WEAVIATE_ROLE TO USER weaviate_user;
 ```
-
-To configure your own instance, edit these fields before you run the SQL code.
-
-- Add a user
-- Add a role
-- Edit the `PASSWORD` field
 
 Create a warehouse for processing data in Snowflake.
 
@@ -705,7 +699,7 @@ CALL SYSTEM$GET_SERVICE_STATUS('weaviate');
 
 ## Send Product Data to Weaviate
 
-Now, with our product summaries in our `PRODUCTES` table, we are ready to send this data to Weaviate and vectorize the data.
+Now, with our product summaries in our `PRODUCTS` table, we are ready to send this data to Weaviate and vectorize the data.
 
 ### Copy Data to Weaviate
 
