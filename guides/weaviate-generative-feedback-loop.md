@@ -1,12 +1,3 @@
-author: Jon Tuite
-id: weaviate-generative-feedback-loop
-summary: Create an end-to-end generative feedback loop by using an LLM to turn product review data into a searchable products collection in Weaviate.
-categories: Getting-Started
-environments: web
-status: Published 
-feedback link: https://github.com/Snowflake-Labs/sfguide-getting-started-weaviate-on-spcs/issues
-tags: Weaviate, Containers, Ollama, Mistral, LLM, vectors, vectorizer, embeddings, semantic search, hybrid search 
-
 # Weaviate Generative Feedback Loop
 
 ## Overview 

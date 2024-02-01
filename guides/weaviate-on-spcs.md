@@ -1,11 +1,4 @@
-author: Jon Tuite
-id: weaviate-on-spcs
-summary: Use SPCS to deploy Weaviate and a vectorizer, then load data and perform a hybrid search on vectors.
-categories: Getting-Started
-environments: web
-status: Published 
-feedback link: https://github.com/Snowflake-Labs/sfguide-getting-started-weaviate-on-spcs/issues
-tags: Weaviate, Containers, vectors, vectorizer, embeddings, semantic search, hybrid search 
+# Getting Started with Weaviate on SPCS
 
 ## 1. Log into Snowflake
 
