@@ -2,6 +2,7 @@
 -- before running this setup.sql
 
 -- Compute Pool --
+USE ROLE SYSADMIN;
 CREATE COMPUTE POOL IF NOT EXISTS WEAVIATE_COMPUTE_POOL
   MIN_NODES = 1
   MAX_NODES = 1
