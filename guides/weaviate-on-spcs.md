@@ -144,7 +144,7 @@ docker build --rm --no-cache --platform linux/amd64 -t text2vec ./images/text2ve
 Log in to the Docker repository. The Snowpark account name, username, and password are the same as your `snowsql` credentials.
 
 ```bash
-docker login <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com  -u YOUR_SNOWFLAKE_USERNAME
+docker login <SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com  -u YOUR_SNOWFLAKE_USERNAME
 ```
 
 After you login to the Docker repository, tag the images and push them to the repository.
@@ -152,17 +152,17 @@ After you login to the Docker repository, tag the images and push them to the re
 The `docker tag` commands look like this:
 
 ```bash
-docker tag weaviate <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/weaviate
-docker tag juypter <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/jupyter
-docker tag text2vec <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/text2vec
+docker tag weaviate <SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/weaviate
+docker tag juypter <SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/jupyter
+docker tag text2vec <SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/text2vec
 ```
 
 The `docker push` commands look like this:
 
 ```bash
-docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/weaviate
-docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/jupyter
-docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/text2vec
+docker push <SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/weaviate
+docker push <SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/jupyter
+docker push <SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/text2vec
 ```
 
 ### 5. Setup service spec files
@@ -174,7 +174,13 @@ Download the [spec files](../specs), then edit them to specify an image reposito
 For instance, in the `jupyter.yaml` spec, you would update the `image` definition to include your Snowflake Account's information:
 
 ```yaml
-      image: "<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/jupyter"
+image: "<SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/jupyter"
+```
+
+You will also have to update the `SNOW_ACCOUNT` environment variable in the Jupyter spec with your `SNOW_ACCOUNT: <SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>` details:
+
+```yaml
+SNOW_ACCOUNT: <SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>
 ```
 
 When the files are updated, use the `snowsql` client on your local machine to upload them. 

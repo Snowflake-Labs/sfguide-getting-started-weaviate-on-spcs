@@ -1,7 +1,7 @@
 spec:
     containers:
     - name: "weaviate"
-      image: "<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/weaviate"
+      image: "<SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/weaviate"
       env:
         SNOWFLAKE_MOUNTED_STAGE_PATH: "stage"
         QUERY_DEFAULTS_LIMIT: 25
