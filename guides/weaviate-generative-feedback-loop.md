@@ -218,7 +218,7 @@ The first service we will deploy is Jupyter.
 First, we build the image.
 
 ```sh
-docker build --rm --platform linux/amd64 -t jupyter ./images/jupyter
+docker build --rm --no-cache --platform linux/amd64 -t jupyter ./images/jupyter
 ```
 
 Next we will retrieve our repository URL by issuing the following command in our Snowflake client.
@@ -230,12 +230,12 @@ USE SCHEMA PUBLIC;
 SHOW IMAGE REPOSITORIES;
 ```
 
-The result will include a `repository_url`, which will look something like `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.comregistry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo`.
+The result will include a `repository_url`, which will look something like `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo`.
 
 Next, we'll tag the image using this repository URL.
 
 ```sh
-docker tag jupyter <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.comregistry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/jupyter
+docker tag jupyter <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/jupyter
 ```
 
 To push to our registry, we will first need to log in.
@@ -247,7 +247,7 @@ docker login <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com
 Finally, we push the image.
 
 ```sh
-docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.comregistry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/jupyter
+docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/jupyter
 ```
 
 ### Update and push the spec
@@ -262,7 +262,8 @@ Update the `image` entry and replace `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>` with 
 
 Once you have updated and saved the Jupyter spec file, you can upload it to your existing `YAML_STAGE`.
 
-```sh
+```sql
+-- Put file into stage --
 USE ROLE SYSADMIN;
 USE DATABASE WEAVIATE_DEMO;
 USE SCHEMA PUBLIC;
@@ -335,7 +336,7 @@ Ollama will be responsible for serving the Mistral LLM. We will use the Ollama s
 First, we build the image.
 
 ```sh
-docker build --rm --platform linux/amd64 -t ollama ./images/ollama
+docker build --rm --no-cache --platform linux/amd64 -t ollama ./images/ollama
 ```
 
 Next we will retrieve our repository URL by issuing the following command in our Snowflake client.
@@ -347,12 +348,12 @@ USE SCHEMA PUBLIC;
 SHOW IMAGE REPOSITORIES;
 ```
 
-The result will include a `repository_url`, which will look something like `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.comregistry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo`.
+The result will include a `repository_url`, which will look something like `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo`.
 
 Next, we'll tag the image using this repository URL.
 
 ```sh
-docker tag ollama <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.comregistry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/ollama
+docker tag ollama <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/ollama
 ```
 
 To push to our registry, we will first need to log in.
@@ -364,7 +365,7 @@ docker login <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com
 Finally, we push the image.
 
 ```sh
-docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.comregistry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/ollama
+docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/ollama
 ```
 
 ### Update and push the spec
@@ -379,7 +380,8 @@ Update the `image` entry and replace `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>` with 
 
 Once you have updated and saved the Ollama spec file, you can upload it to your existing `YAML_STAGE`.
 
-```sh
+```sql
+-- Put file into stage --
 USE ROLE SYSADMIN;
 USE DATABASE WEAVIATE_DEMO;
 USE SCHEMA PUBLIC;
@@ -476,7 +478,7 @@ We can do this in just a few lines.
 -- Drop Ollama Service and Compute Pool --
 USE ROLE SYSADMIN;
 DROP SERVICE WEAVIATE_DEMO.PUBLIC.OLLAMA;
-DROP COMPUTE POOL OLLAMA POOL;
+DROP COMPUTE POOL OLLAMA_POOL;
 ```
 
 ## Deploying Text2Vec
@@ -488,7 +490,7 @@ Next, we will Text2Vec, a neccessary service for Weaviate to be able to generate
 First, we build the image.
 
 ```sh
-docker build --rm --platform linux/amd64 -t text2vec ./images/text2vec
+docker build --rm --no-cache --platform linux/amd64 -t text2vec ./images/text2vec
 ```
 
 Next we will retrieve our repository URL by issuing the following command in our Snowflake client.
@@ -500,12 +502,12 @@ USE SCHEMA PUBLIC;
 SHOW IMAGE REPOSITORIES;
 ```
 
-The result will include a `repository_url`, which will look something like `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.comregistry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo`.
+The result will include a `repository_url`, which will look something like `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo`.
 
 Next, we'll tag the image using this repository URL.
 
 ```sh
-docker tag text2vec <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.comregistry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/text2vec
+docker tag text2vec <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/text2vec
 ```
 
 To push to our registry, we will first need to log in.
@@ -517,7 +519,7 @@ docker login <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com
 Finally, we push the image.
 
 ```sh
-docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.comregistry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/text2vec
+docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/text2vec
 ```
 
 ### Update and push the spec
@@ -532,7 +534,8 @@ Update the `image` entry and replace `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>` with 
 
 Once you have updated and saved the Text2Vec spec file, you can upload it to your existing `YAML_STAGE`.
 
-```sh
+```sql
+-- Put file into stage --
 USE ROLE SYSADMIN;
 USE DATABASE WEAVIATE_DEMO;
 USE SCHEMA PUBLIC;
@@ -545,6 +548,7 @@ Our service will need to run on a compute pool. We will create a dedicated compu
 
 ```sql
 -- Compute Pool --
+USE ROLE SYSADMIN;
 CREATE COMPUTE POOL IF NOT EXISTS TEXT2VEC_COMPUTE_POOL
   MIN_NODES = 1
   MAX_NODES = 1
@@ -562,6 +566,9 @@ Next, we will deploy our service to our compute pool, using the Text2Vec spec we
 
 ```sql
 -- Service --
+USE ROLE SYSADMIN;
+USE DATABASE WEAVIATE_DEMO;
+USE SCHEMA PUBLIC;
 CREATE SERVICE TEXT2VEC
   IN COMPUTE POOL TEXT2VEC_COMPUTE_POOL 
   FROM @YAML_STAGE
@@ -592,7 +599,7 @@ Now, we will deploy Weaviate!
 First, we build the image.
 
 ```sh
-docker build --rm --platform linux/amd64 -t weaviate ./images/weaviate
+docker build --rm --no-cache --platform linux/amd64 -t weaviate ./images/weaviate
 ```
 
 Next we will retrieve our repository URL by issuing the following command in our Snowflake client.
@@ -604,12 +611,12 @@ USE SCHEMA PUBLIC;
 SHOW IMAGE REPOSITORIES;
 ```
 
-The result will include a `repository_url`, which will look something like `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.comregistry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo`.
+The result will include a `repository_url`, which will look something like `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo`.
 
 Next, we'll tag the image using this repository URL.
 
 ```sh
-docker tag weaviate <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.comregistry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/weaviate
+docker tag weaviate <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/weaviate
 ```
 
 To push to our registry, we will first need to log in.
@@ -621,7 +628,7 @@ docker login <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com
 Finally, we push the image.
 
 ```sh
-docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.comregistry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/weaviate
+docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/weaviate
 ```
 
 ### Update and push the spec
@@ -636,7 +643,8 @@ Update the `image` entry and replace `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>` with 
 
 Once you have updated and saved the Weaviate spec file, you can upload it to your existing `YAML_STAGE`.
 
-```sh
+```sql
+-- Put file into stage --
 USE ROLE SYSADMIN;
 USE DATABASE WEAVIATE_DEMO;
 USE SCHEMA PUBLIC;
@@ -649,6 +657,7 @@ Our service will need to run on a compute pool. We will create a dedicated compu
 
 ```sql
 -- Compute Pool --
+USE ROLE SYSADMIN;
 CREATE COMPUTE POOL IF NOT EXISTS WEAVIATE_COMPUTE_POOL
   MIN_NODES = 1
   MAX_NODES = 1

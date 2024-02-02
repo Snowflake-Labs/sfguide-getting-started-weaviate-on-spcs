@@ -136,9 +136,9 @@ Build the Docker images in your local shell. There are three images:
 The Docker files are in [this repo](../images). You don't need to modify them to run this sample instance. If you need to use non-standard ports or make other changes for your deployment, edit the Dockerfiles before you create the containers. You can run these commands from the root directory of this repository.
 
 ```bash
-docker build --rm --platform linux/amd64 -t weaviate ./images/weaviate
-docker build --rm --platform linux/amd64 -t jupyter ./images/jupyter
-docker build --rm --platform linux/amd64 -t text2vec ./images/text2vec
+docker build --rm --no-cache --platform linux/amd64 -t weaviate ./images/weaviate
+docker build --rm --no-cache --platform linux/amd64 -t jupyter ./images/jupyter
+docker build --rm --no-cache --platform linux/amd64 -t text2vec ./images/text2vec
 ```
 
 Log in to the Docker repository. The Snowpark account name, username, and password are the same as your `snowsql` credentials.
@@ -222,8 +222,6 @@ Grant permission to the services to the weaviate_role, to ensure the correspondi
 -- Usage for Weaviate Role --
 USE ROLE SECURITYADMIN;
 GRANT USAGE ON SERVICE WEAVIATE_DEMO.PUBLIC.JUPYTER TO ROLE WEAVIATE_ROLE;
-GRANT USAGE ON SERVICE WEAVIATE_DEMO.PUBLIC.WEAVIATE TO ROLE WEAVIATE_ROLE;
-GRANT USAGE ON SERVICE WEAVIATE_DEMO.PUBLIC.TEXT2VEC TO ROLE WEAVIATE_ROLE;
 ```
 
 ### 8. Log in to the Jupyter Notebook Server
