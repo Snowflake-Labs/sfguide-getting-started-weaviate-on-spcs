@@ -1,7 +1,7 @@
 spec:
   container:
   - name: ollama
-    image: "<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/ollama"
+    image: "<SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/ollama"
     env:
       LLM_MODEL: mistral
       ENABLE_CUDA: 1

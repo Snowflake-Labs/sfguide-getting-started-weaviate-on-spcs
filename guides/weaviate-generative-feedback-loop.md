@@ -230,24 +230,24 @@ USE SCHEMA PUBLIC;
 SHOW IMAGE REPOSITORIES;
 ```
 
-The result will include a `repository_url`, which will look something like `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo`.
+The result will include a `repository_url`, which will look something like `<SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo`.
 
 Next, we'll tag the image using this repository URL.
 
 ```sh
-docker tag jupyter <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/jupyter
+docker tag jupyter <SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/jupyter
 ```
 
 To push to our registry, we will first need to log in.
 
 ```sh
-docker login <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com  -u YOUR_SNOWFLAKE_USERNAME
+docker login <SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com  -u YOUR_SNOWFLAKE_USERNAME
 ```
 
 Finally, we push the image.
 
 ```sh
-docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/jupyter
+docker push <SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/jupyter
 ```
 
 ### Update and push the spec
@@ -255,10 +255,16 @@ docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/
 With our image in our repository, we will next have to update the [Jupyter spec file](../specs/jupyter.yaml), which is the specificiation that SPCS will use to create our Jupyter service. Within that spec, is an entry for `image`, which looks like this:
 
 ```yaml
-image: "<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/jupyter"
+image: "<SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/jupyter"
 ```
 
-Update the `image` entry and replace `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>` with your Snowflake acccount and Snowflake org, which you retrieved earlier with `SHOW IMAGE REPOSITORIES`.
+Update the `image` entry and replace `<SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>` with your Snowflake acccount and Snowflake org, which you retrieved earlier with `SHOW IMAGE REPOSITORIES`.
+
+You will also have to update the `SNOW_ACCOUNT` environment variable in the Jupyter spec with your `SNOW_ACCOUNT: <SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>` details:
+
+```yaml
+SNOW_ACCOUNT: <SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>
+```
 
 Once you have updated and saved the Jupyter spec file, you can upload it to your existing `YAML_STAGE`.
 
@@ -348,24 +354,24 @@ USE SCHEMA PUBLIC;
 SHOW IMAGE REPOSITORIES;
 ```
 
-The result will include a `repository_url`, which will look something like `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo`.
+The result will include a `repository_url`, which will look something like `<SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo`.
 
 Next, we'll tag the image using this repository URL.
 
 ```sh
-docker tag ollama <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/ollama
+docker tag ollama <SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/ollama
 ```
 
 To push to our registry, we will first need to log in.
 
 ```sh
-docker login <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com  -u YOUR_SNOWFLAKE_USERNAME
+docker login <SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com  -u YOUR_SNOWFLAKE_USERNAME
 ```
 
 Finally, we push the image.
 
 ```sh
-docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/ollama
+docker push <SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/ollama
 ```
 
 ### Update and push the spec
@@ -373,10 +379,10 @@ docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/
 With our image in our repository, we will next have to update the [Ollama spec file](../specs/ollama.yaml), which is the specificiation that SPCS will use to create our Jupyter service. Within that spec, is an entry for `image`, which looks like this:
 
 ```yaml
-image: "<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/ollama"
+image: "<SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/ollama"
 ```
 
-Update the `image` entry and replace `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>` with your Snowflake acccount and Snowflake org, which you retrieved earlier with `SHOW IMAGE REPOSITORIES`.
+Update the `image` entry and replace `<SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>` with your Snowflake acccount and Snowflake org, which you retrieved earlier with `SHOW IMAGE REPOSITORIES`.
 
 Once you have updated and saved the Ollama spec file, you can upload it to your existing `YAML_STAGE`.
 
@@ -502,24 +508,24 @@ USE SCHEMA PUBLIC;
 SHOW IMAGE REPOSITORIES;
 ```
 
-The result will include a `repository_url`, which will look something like `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo`.
+The result will include a `repository_url`, which will look something like `<SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo`.
 
 Next, we'll tag the image using this repository URL.
 
 ```sh
-docker tag text2vec <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/text2vec
+docker tag text2vec <SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/text2vec
 ```
 
 To push to our registry, we will first need to log in.
 
 ```sh
-docker login <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com  -u YOUR_SNOWFLAKE_USERNAME
+docker login <SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com  -u YOUR_SNOWFLAKE_USERNAME
 ```
 
 Finally, we push the image.
 
 ```sh
-docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/text2vec
+docker push <SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/text2vec
 ```
 
 ### Update and push the spec
@@ -527,10 +533,10 @@ docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/
 With our image in our repository, we will next have to update the [Text2Vec spec file](../specs/text2vec.yaml), which is the specificiation that SPCS will use to create our Jupyter service. Within that spec, is an entry for `image`, which looks like this:
 
 ```yaml
-image: "<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/text2vec"
+image: "<SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/text2vec"
 ```
 
-Update the `image` entry and replace `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>` with your Snowflake acccount and Snowflake org, which you retrieved earlier with `SHOW IMAGE REPOSITORIES`.
+Update the `image` entry and replace `<SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>` with your Snowflake acccount and Snowflake org, which you retrieved earlier with `SHOW IMAGE REPOSITORIES`.
 
 Once you have updated and saved the Text2Vec spec file, you can upload it to your existing `YAML_STAGE`.
 
@@ -611,24 +617,24 @@ USE SCHEMA PUBLIC;
 SHOW IMAGE REPOSITORIES;
 ```
 
-The result will include a `repository_url`, which will look something like `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo`.
+The result will include a `repository_url`, which will look something like `<SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo`.
 
 Next, we'll tag the image using this repository URL.
 
 ```sh
-docker tag weaviate <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/weaviate
+docker tag weaviate <SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/weaviate
 ```
 
 To push to our registry, we will first need to log in.
 
 ```sh
-docker login <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com  -u YOUR_SNOWFLAKE_USERNAME
+docker login <SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com  -u YOUR_SNOWFLAKE_USERNAME
 ```
 
 Finally, we push the image.
 
 ```sh
-docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/weaviate
+docker push <SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/weaviate
 ```
 
 ### Update and push the spec
@@ -636,10 +642,10 @@ docker push <SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/
 With our image in our repository, we will next have to update the [Weaviate spec file](../specs/weaviate.yaml), which is the specificiation that SPCS will use to create our Jupyter service. Within that spec, is an entry for `image`, which looks like this:
 
 ```yaml
-image: "<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/weaviate"
+image: "<SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/weaviate"
 ```
 
-Update the `image` entry and replace `<SNOWFLAKE_ACCOUNT>-<SNOWFLAKE_ORG>` with your Snowflake acccount and Snowflake org, which you retrieved earlier with `SHOW IMAGE REPOSITORIES`.
+Update the `image` entry and replace `<SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>` with your Snowflake acccount and Snowflake org, which you retrieved earlier with `SHOW IMAGE REPOSITORIES`.
 
 Once you have updated and saved the Weaviate spec file, you can upload it to your existing `YAML_STAGE`.
 
