@@ -15,7 +15,7 @@ DESCRIBE COMPUTE POOL WEAVIATE_COMPUTE_POOL;
 USE ROLE SYSADMIN;
 USE DATABASE WEAVIATE_DEMO;
 USE SCHEMA PUBLIC;
-PUT file:///path/to/weaviate.yaml @yaml_stage;
+PUT file:///path/to/weaviate.yaml @yaml_stage overwrite=true auto_compress=false;
 
 -- Service --
 USE ROLE SYSADMIN;
