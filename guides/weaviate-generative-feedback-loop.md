@@ -329,7 +329,9 @@ USE ROLE SYSADMIN;
 SHOW ENDPOINTS IN SERVICE WEAVIATE_DEMO.PUBLIC.JUPYTER;
 ```
 
-Once the endpoint has been provisioned, we can take the resulting public endpoint, availble in the output of `SHOW ENDPOINTS IN SERVICE WEAVIATE_DEMO.PUBLIC.JUPYTER`, located under `ingress_url` and log into the Jupyter service, using our `WEAVIATE_USER`.
+Once the endpoint has been provisioned, we can take the resulting public endpoint, available in the output of `SHOW ENDPOINTS IN SERVICE WEAVIATE_DEMO.PUBLIC.JUPYTER`, located under `ingress_url` and log into the Jupyter service, using our `WEAVIATE_USER`.
+
+![alt_text](assets/image13.png "jupyter notebooks")
 
 And with that, our first service is deployed!
 
@@ -460,6 +462,8 @@ From the Juptyer Service, access the `Create_Product_Descriptions.ipynb` noteboo
 2. Takes the first 20 reviews for each ASIN and sends these to Mistral LLM for summary.
 3. Saves the results back to a table `WEAVIATE_DEMO.PUBLIC.PRODUCT_REVIEWS`
 
+![alt_text](assets/image6.png "generated data")
+
 You can hop back into your Snowflake client and see the results:
 
 ```sql
@@ -468,7 +472,7 @@ USE WAREHOUSE WEAVIATE_WAREHOUSE;
 SELECT * FROM WEAVIATE_DEMO.PUBLIC.PRODUCTS;
 ```
 
-![alt_text](assets/image3.png "generated data")
+![alt_text](assets/image3.png "product data")
 
 The provided notebook includes the first 50 ASINs. If you want to process more ASINs (there are hundreds!), you can update the `product_record_limit` that is configured at the top of the notebook.
 
@@ -694,7 +698,7 @@ CREATE SERVICE WEAVIATE
 
 ### Confirm the service works
 
-Becuase the Weaviate service will only be accessed from within the Snowflake network, there is no ingress url. To see if the service is up and running, we will use the `SYSTEM$GET_SERVICE_STATUS` command.
+Because the Weaviate service will only be accessed from within the Snowflake network, there is no ingress url. To see if the service is up and running, we will use the `SYSTEM$GET_SERVICE_STATUS` command.
 
 ```sql
 USE ROLE SYSADMIN;
@@ -717,7 +721,9 @@ Run through the notebook and it will copy the newly generated data over to Weavi
 
 Finally, try some queries on the data to test out Weaviate’s semantic and hybrid search capabilities. With this data, you can now search for experiences, feelings, keywords, or product names of the music-related products.
 
-![alt_text](assets/image12.png "image_tooltip")
+![alt_text](assets/image4.png "Keyword Search")
+![alt_text](assets/image2.png "Hybrid Search")
+
 
 ## Conclusion
 
