@@ -134,6 +134,25 @@ GRANT ALL PRIVILEGES ON STAGE WEAVIATE_DEMO.PUBLIC.FILES TO WEAVIATE_ROLE;
 GRANT ALL PRIVILEGES ON STAGE WEAVIATE_DEMO.PUBLIC.REVIEW_DATA TO WEAVIATE_ROLE;
 ```
 
+External access integration that will allow the Jupyter service to access the open internet.
+
+```sql
+-- External Access Integration
+USE ROLE ACCOUNTADMIN;
+USE DATABASE WEAVIATE_DEMO;
+USE SCHEMA PUBLIC;
+CREATE NETWORK RULE allow_all_rule
+  TYPE = 'HOST_PORT'
+  MODE= 'EGRESS'
+  VALUE_LIST = ('0.0.0.0:443','0.0.0.0:80');
+
+CREATE EXTERNAL ACCESS INTEGRATION allow_all_eai
+  ALLOWED_NETWORK_RULES=(allow_all_rule)
+  ENABLED=TRUE;
+
+GRANT USAGE ON INTEGRATION allow_all_eai TO ROLE SYSADMIN;
+```
+
 ## Loading Data
 
 Start by loading data into Snowflake.  Skip this step if your data is already there.
@@ -308,7 +327,8 @@ CREATE SERVICE JUPYTER
   FROM @YAML_STAGE
   SPEC='jupyter.yaml'
   MIN_INSTANCES=1
-  MAX_INSTANCES=1;
+  MAX_INSTANCES=1
+  EXTERNAL_ACCESS_INTEGRATIONS=(ALLOW_ALL_EAI);
 ```
 
 We must also ensure the `WEAVIATE_ROLE` has the permissions necessary to use this service.
