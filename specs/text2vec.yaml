@@ -20,5 +20,3 @@ spec:
     - name: "text2vec"
       port: 8080
       public: true
-    - name: stage
-      source: "@files"
