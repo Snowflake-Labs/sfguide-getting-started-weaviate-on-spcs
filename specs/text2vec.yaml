@@ -3,7 +3,6 @@ spec:
     - name: "text2vec"
       image: "<SNOWFLAKE_ORG>-<SNOWFLAKE_ACCOUNT>.registry.snowflakecomputing.com/weaviate_demo/public/weaviate_repo/text2vec"
       env:
-        SNOWFLAKE_MOUNTED_STAGE_PATH: "stage"
         ENABLE_CUDA: 1
         NVIDIA_VISIBLE_DEVICES : all
       resources:
