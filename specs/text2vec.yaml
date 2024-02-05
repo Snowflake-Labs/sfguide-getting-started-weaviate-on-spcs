@@ -12,9 +12,6 @@ spec:
         requests:
           memory: 30G
           nvidia.com/gpu: 1
-      volumeMounts:
-        - name: stage
-          mountPath: /workspace/stage
     endpoints:
     - name: "text2vec"
       port: 8080
