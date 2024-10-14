@@ -12,16 +12,6 @@ It is recommended that you use SnowSQL because you will be uploading files from 
 
 ## 2. Set up environment
 
-Set up OAUTH integration. This will allow Snowflake to authenticate users of your service.
-
-```sql
--- OAuth Integration --
-USE ROLE ACCOUNTADMIN;
-CREATE SECURITY INTEGRATION SNOWSERVICES_INGRESS_OAUTH
-  TYPE=oauth
-  OAUTH_CLIENT=snowservices_ingress
-  ENABLED=true;
-```
 
 Give the SYSADMIN the ability to bind service endpoints. This will allow the SYSADMIN to create services.
 
